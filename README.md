@@ -3,7 +3,9 @@
 https://greasyfork.org/scripts/30839
 ### Description
 
-Show full size + working middle click to open new tab
+Show full size + working middle click to open new tab.
+
+[Gif](https://i.imgur.com/BvsazFJ.gifv) example of full size and default resize.
 
 Controls:
 1) Left click on button "Full size": Expand image as wide as image is or as wide as monitor.
