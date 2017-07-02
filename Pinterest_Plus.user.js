@@ -3,8 +3,9 @@
 // @namespace   https://greasyfork.org/users/102866
 // @description Show full size + working middle click to open new tab
 // @include     https://*.pinterest.com/*
+// @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.03
+// @version     0.1.04
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -237,14 +238,15 @@ function SetUpForPin()
 	}
 	//console.log(document.querySelector("div.flex.justify-between div"));
 	//*
+	//console.log(document.querySelectorAll("a.imageLink img[alt]"));
 
 	setTimeout(function ()
 	{
-		ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img.block")), document.querySelectorAll("a.imageLink img.block"));
-		SetEventButton(buttonButton, GetFullSizeURL(document.querySelectorAll("a.imageLink img.block")));
+		ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
+		SetEventButton(buttonButton, GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")));
 		if (pFullSize)
 		{
-			ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img.block")), document.querySelectorAll("a.imageLink img.block"));
+			ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 		}
 	}, 1000);
 }
@@ -275,7 +277,7 @@ function SetEventButton(btn, url)
 				ChangeImgTagsBack();
 			} else
 			{
-				ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img.block")), document.querySelectorAll("a.imageLink img.block"));
+				ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 			}
 			console.log("left");
 		}
