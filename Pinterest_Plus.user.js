@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.com/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.04
+// @version     0.1.05
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -16,7 +16,8 @@
 var whatPage = 0,
 	fullSize = false,
 	oriMaxWidthOne,
-	oriMaxWidthTwo;
+	oriMaxWidthTwo,
+	height;
 
 //prefs
 var pFullSize;
@@ -31,7 +32,7 @@ function Main()
 	SetCSS();
 	SetSettings();
 	SwitchPage();
-	console.log("Page number: " + whatPage);
+	console.log("Page number: " + whatPage);	//Enum plz :c
 }
 
 function SetCSS()
@@ -219,11 +220,11 @@ function SetUpForPin()
 {
 	//TODO
 	//*
-	const buttonDiv = document.createElement("div");
-	const buttonButton = document.createElement("button");
-	const buttonText = document.createTextNode("Full size");
-	const parentDiv = document.querySelector("div.flex.justify-between div");
-	const buttonAttr = document.createAttribute("style");
+	var buttonDiv = document.createElement("div");
+	var buttonButton = document.createElement("button");
+	var buttonText = document.createTextNode("Full size");
+	var parentDiv = document.querySelector("div.flex.justify-between div");
+	var buttonAttr = document.createAttribute("style");
 	buttonAttr.value = "font-size: 14px; will-change: transform; margin-left: 8px;"
 	buttonButton.appendChild(buttonText);
 	buttonDiv.appendChild(buttonButton);
@@ -236,16 +237,14 @@ function SetUpForPin()
 	{
 		$(buttonButton).addClass("ppTrue");
 	}
-	//console.log(document.querySelector("div.flex.justify-between div"));
 	//*
-	//console.log(document.querySelectorAll("a.imageLink img[alt]"));
 
 	setTimeout(function ()
 	{
-		ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 		SetEventButton(buttonButton, GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")));
 		if (pFullSize)
 		{
+			ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 			ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 		}
 	}, 1000);
@@ -274,9 +273,10 @@ function SetEventButton(btn, url)
 		{
 			if (fullSize)
 			{
-				ChangeImgTagsBack();
+				ChangeTagsBack();
 			} else
 			{
+				ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 				ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 			}
 			console.log("left");
@@ -312,31 +312,33 @@ function ChangeImgTags(irl, img)
 	imgw.onload = function ()
 	{
 		//alert(this.width + 'x' + this.height);
-		const closeUp = document.querySelector("div.closeupContainer");
-		const imageLink = document.querySelector("a.imageLink");
+		var closeUp = document.querySelector("div.closeupContainer");
+		var imageLink = document.querySelector("a.imageLink");
 		var mWidth = this.width + 64;
-		//console.log(mWidth);
-		//console.log(closeUp);
-		//console.log(closeUp.style.maxWidth);
+		ChangePositionOfFooterImage(this.height, imageLink.nextSibling);
 		oriMaxWidthOne = closeUp.style.maxWidth;
 		closeUp.style.maxWidth = mWidth + "px";
-		//console.log(oriMaxWidthOne);
 		oriMaxWidthTwo = imageLink.childNodes[0].style.maxWidth;
 		imageLink.childNodes[0].style.maxWidth = "none";
-		//console.log(oriMaxWidthTwo);
-		//console.log(imageLink.childNodes[0]);
 	}
 	imgw.src = irl;
 	fullSize = true;
 }
 
-function ChangeImgTagsBack()
+function ChangeTagsBack()
 {
-	const closeUp = document.querySelector("div.closeupContainer");
-	const imageLink = document.querySelector("a.imageLink");
+	var closeUp = document.querySelector("div.closeupContainer");
+	var imageLink = document.querySelector("a.imageLink");
+	var footer = imageLink.nextSibling;
 	closeUp.style.maxWidth = oriMaxWidthOne;
 	imageLink.childNodes[0].style.maxWidth = oriMaxWidthTwo;
+	footer.style.marginTop = 0;
 	fullSize = false;
+}
+
+function ChangePositionOfFooterImage(hei, el)
+{
+	el.style.marginTop = (hei/2) + "px";
 }
 
 //hHander for url
