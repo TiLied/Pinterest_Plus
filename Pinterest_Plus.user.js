@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.com/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.06
+// @version     0.1.07
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -319,6 +319,7 @@ function ChangeImgTags(irl, img)
 		oriHeight = $(imageLink.childNodes[0]).height();
 		imageLink.childNodes[0].style.maxWidth = "none";
 		$(imageLink.childNodes[0]).height("auto");
+		imageLink.nextSibling.style.marginTop = 50 + "px";
 	}
 	imgw.src = irl;
 	fullSize = true;
@@ -331,6 +332,7 @@ function ChangeTagsBack()
 	closeUp.style.maxWidth = oriMaxWidthOne;
 	imageLink.childNodes[0].style.maxWidth = oriMaxWidthTwo;
 	$(imageLink.childNodes[0]).height(oriHeight);
+	imageLink.nextSibling.style.marginTop = 0;
 	fullSize = false;
 }
 
