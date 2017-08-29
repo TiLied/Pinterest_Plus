@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.com/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.09
+// @version     0.1.10
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -67,11 +67,13 @@ function SetSettings()
 	console.log("*prefs:");
 	console.log("*-----*");
 	var vals = [];
-	for (var i = 0; i < GM_listValues().length; i++)
+
+	//Find out that var in for block is not local... Seriously js?
+	for (let i = 0; i < GM_listValues().length; i++)
 	{
 		vals[i] = GM_listValues()[i];
 	}
-	for (var i = 0; i < vals.length; i++)
+	for (let i = 0; i < vals.length; i++)
 	{
 		console.log("*" + vals[i] + ":" + GM_getValue(vals[i]));
 	}
@@ -82,14 +84,14 @@ function SetSettings()
 function HasValue(nameVal, optValue)
 {
 	var vals = [];
-	for (var i = 0; i < GM_listValues().length; i++)
+	for (let i = 0; i < GM_listValues().length; i++)
 	{
 		vals[i] = GM_listValues()[i];
 	}
 
 	if (vals.length === 0)
 	{
-		if (optValue != undefined)
+		if (optValue !== undefined)
 		{
 			GM_setValue(nameVal, optValue);
 			return true;
@@ -99,12 +101,12 @@ function HasValue(nameVal, optValue)
 		}
 	}
 
-	if (typeof nameVal != "string")
+	if (typeof nameVal !== "string")
 	{
 		return alert("name of value: '" + nameVal + "' are not string");
 	}
 
-	for (var i = 0; i < vals.length; i++)
+	for (let i = 0; i < vals.length; i++)
 	{
 		if (vals[i] === nameVal)
 		{
@@ -112,7 +114,7 @@ function HasValue(nameVal, optValue)
 		}
 	}
 
-	if (optValue != undefined)
+	if (optValue !== undefined)
 	{
 		GM_setValue(nameVal, optValue);
 		return true;
@@ -126,12 +128,12 @@ function HasValue(nameVal, optValue)
 function DeleteValues(nameVal)
 {
 	var vals = [];
-	for (var i = 0; i < GM_listValues().length; i++)
+	for (let i = 0; i < GM_listValues().length; i++)
 	{
 		vals[i] = GM_listValues()[i];
 	}
 
-	if (vals.length === 0 || typeof nameVal != "string")
+	if (vals.length === 0 || typeof nameVal !== "string")
 	{
 		return;
 	}
@@ -139,13 +141,13 @@ function DeleteValues(nameVal)
 	switch (nameVal)
 	{
 		case "all":
-			for (var i = 0; i < vals.length; i++)
+			for (let i = 0; i < vals.length; i++)
 			{
 				GM_deleteValue(vals[i]);
 			}
 			break;
 		case "old":
-			for (var i = 0; i < vals.length; i++)
+			for (let i = 0; i < vals.length; i++)
 			{
 				if (vals[i] === "debug" || vals[i] === "debugA")
 				{
@@ -154,7 +156,7 @@ function DeleteValues(nameVal)
 			}
 			break;
 		default:
-			for (var i = 0; i < vals.length; i++)
+			for (let i = 0; i < vals.length; i++)
 			{
 				if (vals[i] === nameVal)
 				{
@@ -257,7 +259,7 @@ function SetEventButton(btn, url)
 {
 	$(btn).on('mousedown', function (e)
 	{
-		if ((e.which == 3))
+		if (e.which === 3)
 		{
 			if (pFullSize)
 			{
@@ -272,7 +274,7 @@ function SetEventButton(btn, url)
 			}
 			console.log("right");
 		}
-		if ((e.which == 1))
+		if (e.which === 1)
 		{
 			if (fullSize)
 			{
@@ -284,7 +286,7 @@ function SetEventButton(btn, url)
 			}
 			console.log("left");
 		}
-		if ((e.which == 2))
+		if (e.which === 2)
 		{
 			GM_openInTab(url);
 			console.log("middle");
@@ -302,7 +304,7 @@ function GetFullSizeURL(img)
 
 function ChangeSource(irl, img)
 {
-	for (var i = 0; i < img.length; i++)
+	for (let i = 0; i < img.length; i++)
 	{
 		img[i].src = irl;
 	}
@@ -311,8 +313,7 @@ function ChangeSource(irl, img)
 function ChangeImgTags(irl, img)
 {
 	var imgw = new Image();
-	imgw.onload = function ()
-	{
+	imgw.onload = function () {
 		var closeUp = document.querySelector("div.closeupContainer");
 		var imageLink = document.querySelector("a.imageLink");
 		var footer = $(imageLink).parent();
@@ -324,7 +325,7 @@ function ChangeImgTags(irl, img)
 		imageLink.childNodes[0].style.maxWidth = "none";
 		$(imageLink.childNodes[0]).height("auto");
 		footer.next().css("margin-top", 50);
-	}
+	};
 	imgw.src = irl;
 	fullSize = true;
 }
@@ -350,11 +351,11 @@ function UrlHandler()
 	var that = this;
 	var detect = function ()
 	{
-		if (that.oldHash != window.location.pathname)
+		if (that.oldHash !== window.location.pathname)
 		{
 			that.oldHash = window.location.pathname;
 			setTimeout(function () { SwitchPage(); }, oneSecond);
 		}
 	};
-	this.Check = setInterval(function () { detect() }, 200);
+	this.Check = setInterval(function () { detect(); }, 200);
 }
