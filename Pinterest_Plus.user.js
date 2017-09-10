@@ -3,9 +3,10 @@
 // @namespace   https://greasyfork.org/users/102866
 // @description Show full size + working middle click to open new tab
 // @include     https://*.pinterest.com/*
+// @include     https://*.pinterest.jp/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.10
+// @version     0.1.11
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -202,19 +203,19 @@ function GetPage(url)
 	if (document.location.pathname === "/")
 	{
 		whatPage = 1;
-	} else if (url.match(/https:\/\/[a-z]+\.pinterest\.com\/search/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/search/i))
 	{
 		whatPage = 2;
-	} else if (url.match(/https:\/\/[a-z]+\.pinterest\.com\/pin/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/pin/i))
 	{
 		whatPage = 3;
-	} else if (url.match(/https:\/\/[a-z]+\.pinterest\.com\/topics/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/topics/i))
 	{
 		whatPage = 4;
-	} else if (url.match(/https:\/\/[a-z]+\.pinterest\.com\/news_hub/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/news_hub/i))
 	{
 		whatPage = 5;
-	} else if (url.match(/https:\/\/[a-z]+\.pinterest\.com\/categories/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/categories/i))
 	{
 		whatPage = 6;
 	} else
@@ -259,7 +260,7 @@ function SetEventButton(btn, url)
 {
 	$(btn).on('mousedown', function (e)
 	{
-		if (e.which === 3)
+		if ((e.which === 3))
 		{
 			if (pFullSize)
 			{
@@ -274,7 +275,7 @@ function SetEventButton(btn, url)
 			}
 			console.log("right");
 		}
-		if (e.which === 1)
+		if ((e.which === 1))
 		{
 			if (fullSize)
 			{
@@ -286,7 +287,7 @@ function SetEventButton(btn, url)
 			}
 			console.log("left");
 		}
-		if (e.which === 2)
+		if ((e.which === 2))
 		{
 			GM_openInTab(url);
 			console.log("middle");
