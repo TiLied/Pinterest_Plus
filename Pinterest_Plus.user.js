@@ -16,7 +16,7 @@
 // @include     https://*.pinterest.se/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.12
+// @version     0.1.13
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -28,12 +28,14 @@ var whatPage = 0,
 	fullSize = false,
 	oriMaxWidthOne,
 	oriMaxWidthTwo,
-	oriHeight;
+	oriHeight,
+	oriWidth;
 
 const oneSecond = 1000;
 
 //prefs
-var pFullSize;
+var pFullSize,
+	debug = false;
 
 /**
 * ENUM, BECAUSE WHY NOT ¯\_(ツ)_/¯
@@ -275,11 +277,12 @@ function SetUpForPin()
 
 	setTimeout(function ()
 	{
-		SetEventButton(buttonButton, GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")));
+		var urlF = GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
+		SetEventButton(buttonButton, urlF);
 		if (pFullSize)
 		{
-			ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
-			ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
+			ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
+			ChangeImgTags(urlF, document.querySelectorAll("a.imageLink img[alt]"));
 		}
 	}, oneSecond);
 }
@@ -310,8 +313,9 @@ function SetEventButton(btn, url)
 				ChangeTagsBack();
 			} else
 			{
-				ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
-				ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
+				var urlF = GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
+				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
+				ChangeImgTags(urlF, document.querySelectorAll("a.imageLink img[alt]"));
 			}
 			console.log("left");
 		}
@@ -341,34 +345,78 @@ function ChangeSource(irl, img)
 
 function ChangeImgTags(irl, img)
 {
-	var imgw = new Image();
-	imgw.onload = function () {
-		var closeUp = document.querySelector("div.closeupContainer");
-		var imageLink = document.querySelector("a.imageLink");
-		var footer = $(imageLink).parent();
-		var mWidth = this.width + 64;
-		oriMaxWidthOne = closeUp.style.maxWidth;
-		closeUp.style.maxWidth = mWidth + "px";
-		oriMaxWidthTwo = imageLink.childNodes[0].style.maxWidth;
-		oriHeight = $(imageLink.childNodes[0]).height();
-		imageLink.childNodes[0].style.maxWidth = "none";
-		$(imageLink.childNodes[0]).height("auto");
-		footer.next().css("margin-top", 50);
-	};
-	imgw.src = irl;
-	fullSize = true;
+	try
+	{
+		var imgw = new Image();
+		imgw.onload = function ()
+		{
+			var closeUp = document.querySelector("div.closeupContainer");
+			var imageLink = document.querySelector("a.imageLink");
+			var footer = $(imageLink).parent().parent();
+			var mWidth = this.width + 64;
+			if (debug)
+			{
+				console.log("all vars---");
+				console.log(closeUp);
+				console.log(imageLink);
+				console.log(footer);
+				console.log(mWidth);
+				console.log("all vars---");
+			}
+			oriMaxWidthOne = closeUp.style.maxWidth;
+			if(debug) console.log(oriMaxWidthOne);
+			closeUp.style.maxWidth = mWidth + "px";
+			if (debug) console.log(closeUp.style.maxWidth);
+			oriMaxWidthTwo = imageLink.parentElement.style.maxWidth;
+			if (debug)
+			{
+				console.log(imageLink.parentElement.style.maxWidth);
+				console.log(oriMaxWidthTwo);
+			}
+			oriHeight = $(imageLink.childNodes[1]).height();
+			oriWidth = $(imageLink.childNodes[1]).width();
+			imageLink.parentElement.style.maxWidth = "none";
+			$(imageLink.childNodes[1]).innerHeight(this.height);
+			$(imageLink.childNodes[1]).innerWidth("auto");
+			imageLink.childNodes[1].style.maxHeight = $("a.imageLink > div > div > div > div > div > div > img").height() + "px";
+			footer.next().css("margin-top", 50);
+			if (debug)
+			{
+				console.log("all original values---");
+				console.log(oriMaxWidthOne);
+				console.log(oriMaxWidthTwo);
+				console.log(oriHeight);
+				console.log("*" + this.height);
+				console.log(oriWidth);
+				console.log("*" + this.width);
+				console.log("all original values---");
+			}
+		};
+		imgw.src = irl;
+		fullSize = true;
+	} catch (e)
+	{
+		console.log(e);
+	}
 }
 
 function ChangeTagsBack()
 {
-	var closeUp = document.querySelector("div.closeupContainer");
-	var imageLink = document.querySelector("a.imageLink");
-	var footer = $(imageLink).parent();
-	closeUp.style.maxWidth = oriMaxWidthOne;
-	imageLink.childNodes[0].style.maxWidth = oriMaxWidthTwo;
-	$(imageLink.childNodes[0]).height(oriHeight);
-	footer.next().css("margin-top", 0);
-	fullSize = false;
+	try
+	{
+		var closeUp = document.querySelector("div.closeupContainer");
+		var imageLink = document.querySelector("a.imageLink");
+		var footer = $(imageLink).parent().parent();
+		closeUp.style.maxWidth = oriMaxWidthOne;
+		imageLink.parentElement.style.maxWidth = oriMaxWidthTwo;
+		$(imageLink.childNodes[1]).height(oriHeight);
+		$(imageLink.childNodes[1]).width(oriWidth);
+		footer.next().css("margin-top", 0);
+		fullSize = false;
+	} catch (e)
+	{
+		console.log(e);
+	}
 }
 
 //hHander for url
