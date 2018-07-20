@@ -2,24 +2,9 @@
 // @name        Pinterest Plus
 // @namespace   https://greasyfork.org/users/102866
 // @description Show full size + working middle click to open new tab
-// @include     https://*.pinterest.com/*
-// @include     https://*.pinterest.jp/*
-// @include     https://*.pinterest.at/*
-// @include     https://*.pinterest.ca/*
-// @include     https://*.pinterest.ch/*
-// @include     https://*.pinterest.co.uk/*
-// @include     https://*.pinterest.com.mx/*
-// @include     https://*.pinterest.de/*
-// @include     https://*.pinterest.dk/*
-// @include     https://*.pinterest.fr/*
-// @include     https://*.pinterest.nz/*
-// @include     https://*.pinterest.se/*
-// @include     https://*.pinterest.com.au/*
-// @include     https://*.pinterest.ie/*
-// @include     https://*.pinterest.ru/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.08
+// @version     0.2.09
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
