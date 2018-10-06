@@ -2,9 +2,10 @@
 // @name        Pinterest Plus
 // @namespace   https://greasyfork.org/users/102866
 // @description Show full size + working middle click to open new tab
+// @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.09
+// @version     0.3.00
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -79,6 +80,14 @@ function SetCSS()
 	}                                         \
 	"));
 
+	$("head").append($("<style type=text/css></style>").text("#pp_divFullSize \
+	{                                         \
+		z-index: 500;!important;     \
+		justify-content: center;\
+		display: flex;\
+	}                                         \
+	"));
+
 	$("head").append($("<!--End of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
 }
 
@@ -90,10 +99,6 @@ async function SetSettings(callBack)
 		pFullSize = await GM.getValue("ppFullSize");
 	}
 
-	if (pFullSize === true)
-	{
-		pFullSize = false;
-	}
 	//Console log prefs with value
 	console.log("*prefs:");
 	console.log("*-----*");
@@ -293,8 +298,6 @@ function Events(what)
 	} catch (e) { console.error(e); }
 }
 
-
-
 //UI SETTING "Full size"
 async function SetUpForPin()
 {
@@ -305,11 +308,10 @@ async function SetUpForPin()
 			var buttonDiv = document.createElement("div");
 			var buttonButton = document.createElement("button");
 			var buttonText = document.createTextNode("Full size");
-			var parentDiv = document.querySelector("div.stickyActionBarRichSave div div div div");
-			console.log(parentDiv);
-			if (debug)
+			var parentDiv = document.querySelector("div.sticky div div div");
+			if (typeof parentDiv === "undefined" || parentDiv === null)
 			{
-				if (typeof parentDiv === "undefined" || parentDiv === null) console.log(parentDiv);
+				return console.error(parentDiv);
 			}
 
 			buttonButton.appendChild(buttonText);
@@ -327,11 +329,18 @@ async function SetUpForPin()
 			}
 
 			var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
+
+			if (typeof urlF === "undefined" || urlF === null)
+			{
+				return console.error("image full url:" + urlF);
+			}
+
 			SetEventButton(buttonButton, urlF);
+
 			if (pFullSize)
 			{
 				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
-				ChangeImgTags(urlF);
+				ShowFullSize(urlF);
 			}
 		}, oneSecond);
 	} catch (e) { console.error(e); }
@@ -360,12 +369,10 @@ async function SetEventButton(btn, url)
 		{
 			if (fullSize)
 			{
-				ChangeTagsBack();
+				ChangeTagsBack(url);
 			} else
 			{
-				var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
-				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
-				ChangeImgTags(urlF);
+				ShowFullSize(url);
 			}
 			console.log("left");
 		}
@@ -378,13 +385,55 @@ async function SetEventButton(btn, url)
 	});
 }
 
+function ShowFullSize(url)
+{
+	try
+	{
+		if ($("#pp_divFullSize").length === 0)
+		{
+			const div = $("<div id=pp_divFullSize></div>").html("");
+			$("div.Closeup").prepend(div);
+		}
+
+		if ($("#pp_img").attr('src') === url)
+		{
+			$("div.containCloseup").css("padding-top", url.height + 100);
+			$("#pp_divFullSize").show(500);
+			return fullSize = true;
+		}
+
+		var img = $("<img id=pp_img src='" + url + "'></img>");
+
+		var maxWidth = $("div.Closeup").css("width");
+		if (typeof maxWidth === "undefined" || maxWidth === null)
+			return console.error("Max width error:" + maxWidth);
+
+		$("#pp_divFullSize").prepend(img);
+
+		$("#pp_divFullSize").hide();
+
+		$(img).css("width", url.width);
+		$(img).css("height", url.height);
+		$(img).css("max-width", maxWidth);
+
+		$("div.containCloseup").css("padding-top", url.height + 100);
+		$("#pp_divFullSize").show(500);
+
+		fullSize = true;
+	} catch (e) { console.error(e); }
+}
 function GetFullSizeURL(img)
 {
 	if (debug) console.log(img);
+	if (typeof img === "undefined" || img === null)
+	{
+		return console.error("image url not found:" + img);
+	}
+
 	var src = img[0].currentSrc;
 	var oldSrc = src;
 	src = src.replace(/[0-9]+x/, "originals");
-	return new Promise(function (resolve, reject)
+	return new Promise(function (resolve)
 	{
 		$.get(src, function ()
 		{
@@ -413,82 +462,11 @@ function ChangeSource(irl, img)
 	}
 }
 
-function ChangeImgTags(irl)
-{
-	try
-	{
-		var imgw = new Image();
-		imgw.onload = function ()
-		{
-			var closeUp = document.querySelector("div.closeupContainer");
-			var imageLink = document.querySelector("a.imageLink");
-			var footer = $(imageLink).parent().parent().parent();
-			var mWidth = this.width + 64;
-			if (debug)
-			{
-				console.log("-all vars---");
-				console.log(closeUp);
-				console.log(imageLink);
-				console.log(footer);
-				console.log(mWidth);
-				console.log("-all vars---");
-			}
-			oriMaxWidthOne = closeUp.style.maxWidth;
-			if(debug) console.log(oriMaxWidthOne);
-			closeUp.style.maxWidth = mWidth + "px";
-			$(closeUp).parent().css("max-width", "initial");
-			$(closeUp).parent().css("margin", 0);
-			if (debug) console.log(closeUp.style.maxWidth);
-			oriMaxWidthTwo = imageLink.parentElement.parentElement.parentElement.style.maxWidth;
-			if (debug)
-			{
-				console.log(imageLink.parentElement.parentElement.parentElement.style.maxWidth);
-				console.log("|" + oriMaxWidthTwo);
-			}
-			oriHeight = $(imageLink.childNodes[1]).height();
-			oriWidth = $(imageLink.childNodes[1]).width();
-			imageLink.parentElement.parentElement.parentElement.style.maxWidth = "none";
-			$(imageLink.childNodes[1]).innerHeight(this.height);
-			$(imageLink.childNodes[1]).innerWidth("auto");
-			imageLink.childNodes[1].style.maxHeight = $("a.imageLink > div > div > div > div > div > div > img").height() + "px";
-			footer.next().css("margin-top", 50);
-			if (debug)
-			{
-				console.log("all original values---");
-				console.log(oriMaxWidthOne);
-				console.log(oriMaxWidthTwo);
-				console.log(oriHeight);
-				console.log("*" + this.height);
-				console.log(oriWidth);
-				console.log("*" + this.width);
-				console.log("all original values---");
-			}
-		};
-		imgw.src = irl;
-		fullSize = true;
-	} catch (e)
-	{
-		console.error(e);
-	}
-}
-
 function ChangeTagsBack()
 {
-	try
-	{
-		var closeUp = document.querySelector("div.closeupContainer");
-		var imageLink = document.querySelector("a.imageLink");
-		var footer = $(imageLink).parent().parent().parent();
-		closeUp.style.maxWidth = oriMaxWidthOne;
-		imageLink.parentElement.parentElement.parentElement.style.maxWidth = oriMaxWidthTwo;
-		$(imageLink.childNodes[1]).height(oriHeight);
-		$(imageLink.childNodes[1]).width(oriWidth);
-		footer.next().css("margin-top", 0);
-		fullSize = false;
-	} catch (e)
-	{
-		console.log(e);
-	}
+	$("div.containCloseup").css("padding-top", 0);
+	$("#pp_divFullSize").hide(500);
+	fullSize = false;
 }
 
 //hHander for url
