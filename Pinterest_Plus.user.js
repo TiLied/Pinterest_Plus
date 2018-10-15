@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.3.00
+// @version     0.3.01
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -311,7 +311,7 @@ async function SetUpForPin()
 			var parentDiv = document.querySelector("div.sticky div div div");
 			if (typeof parentDiv === "undefined" || parentDiv === null)
 			{
-				return console.error(parentDiv);
+				return console.error("div.sticky div div div:" + parentDiv);
 			}
 
 			buttonButton.appendChild(buttonText);
@@ -342,7 +342,7 @@ async function SetUpForPin()
 				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
 				ShowFullSize(urlF);
 			}
-		}, oneSecond);
+		}, oneSecond + 500);
 	} catch (e) { console.error(e); }
 }
 
