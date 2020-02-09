@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.3.03
+// @version     0.3.04
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -77,6 +77,25 @@ function SetCSS()
 	$("head").append($("<style type=text/css></style>").text("button.ppTrue \
 	{                                         \
 		border:2px solid black!important;     \
+	}                                         \
+	"));
+
+	$("head").append($("<style type=text/css></style>").text("#myBtn \
+	{                                         \
+		align-items: center;\
+		box-sizing: border-box;\
+		color:#fff;\
+		font-size: 16px;\
+		font-weight: 700;\
+		letter-spacing: -.4px;\
+		padding: 10px;\
+		padding-top: 10px;\
+		padding-right: 14px;\
+		padding-left: 14px;\
+		padding-bottom: 10px;\
+		margin-top: -4px;\
+		border-style: solid;\
+		border-width: 0px;\
 	}                                         \
 	"));
 
@@ -320,8 +339,9 @@ async function SetUpForPin()
 			parentDiv.appendChild(buttonDiv);
 			$(buttonDiv).addClass("items-center");
 			$(buttonDiv).attr("style", "display: flex;");
-			$(buttonButton).addClass("isBrioFlat matchDenzel Button Module btn hasText rounded primary");
-			$(buttonButton).attr("style", "font-size: 14px; will-change: transform; margin-left: 8px;");
+			//$(buttonButton).addClass("isBrioFlat matchDenzel Button Module btn hasText primary SaveButton__background--enabled SaveButton__background");
+			$(buttonButton).addClass("SaveButton SaveButton--enabled SaveButton__background--enabled SaveButton__background");
+			$(buttonButton).attr("style", "padding: 10px 14px; will-change: transform; margin-left: 8px;");
 			$(buttonButton).attr("id", "myBtn");
 
 			if (pFullSize)
@@ -329,7 +349,15 @@ async function SetUpForPin()
 				$(buttonButton).addClass("ppTrue");
 			}
 
-			var urlF = await GetFullSizeURL(document.querySelectorAll("a[rel] img[alt]"));
+			//TODO NEED BETTER SELECTION!
+			//query = document.querySelectorAll("a[rel] img[alt]");
+			query = $("div.closeupLegoContainer").find("a:first").find("img");
+
+			if (debug) {
+				console.log(query);
+			}
+
+			var urlF = await GetFullSizeURL(query);
 
 			if (typeof urlF === "undefined" || urlF === null)
 			{
@@ -341,10 +369,10 @@ async function SetUpForPin()
 
 			if (pFullSize)
 			{
-				ChangeSource(urlF, document.querySelectorAll("a[rel] img[alt]"));
+				ChangeSource(urlF, query);
 				ShowFullSize(urlF);
 			}
-		}, oneSecond + oneSecond);
+		}, oneSecond + 500);
 	} catch (e) { console.error(e); }
 }
 
@@ -426,15 +454,17 @@ function ShowFullSize(url)
 }
 function GetFullSizeURL(img)
 {
-	if (debug) console.log(img);
 	if (typeof img === "undefined" || img === null)
 	{
 		return console.error("image url not found:" + img);
 	}
 
-	var src = img[0].currentSrc;
+	var src = $(img).get(0).currentSrc;
 	var oldSrc = src;
 	src = src.replace(/[0-9]+x/, "originals");
+
+	if (debug) console.log(src);
+
 	return new Promise(function (resolve)
 	{
 		$.get(src, function ()
@@ -460,7 +490,7 @@ function ChangeSource(irl, img)
 {
 	for (let i = 0; i < img.length; i++)
 	{
-		img[i].src = irl;
+		$(img).get(i).src = irl;
 	}
 }
 
