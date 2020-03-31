@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.3.05
+// @version     0.4.00
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -24,7 +24,8 @@ var whatPage = 0,
 	oriMaxWidthOne,
 	oriMaxWidthTwo,
 	oriHeight,
-	oriWidth;
+	oriWidth,
+	login;
 
 const oneSecond = 1000,
 	deltaTime = 1500;
@@ -65,6 +66,13 @@ void function Main()
 	//Set settings or create
 	SetSettings(function ()
 	{
+		//check login
+		if (debug) console.log($("main[data-test-id='unauthPinPage']"));
+		if ($("main[data-test-id='unauthPinPage']").length !== 0)
+			login = false;
+		else
+			login = true;
+		if(debug) console.log("login: " + login);
 		//Check on what page we are and switch. Currently only on pin page
 		SwitchPage();
 		console.log("Page number: " + whatPage + "/" + Page[whatPage] + " page");
@@ -223,12 +231,15 @@ function SwitchPage()
 			//Events("Scroll");
 			break;
 		case 2:
+			HidePopup();
+			break;
 		case 4:
 		case 5:
 		case 6:
 		case 10:
 			break;
 		case 3:
+			HidePopup();
 			SetUpForPin();
 			break;
 		default:
@@ -328,16 +339,19 @@ async function SetUpForPin()
 			var buttonDiv = document.createElement("div");
 			var buttonButton = document.createElement("button");
 			var buttonText = document.createTextNode("Full size");
-			var parentDiv = document.querySelector("div[data-test-id='closeupActionBar'] div div");
+			var parentDiv = document.querySelector("div[data-test-id='closeupActionBar'] div div") || document.querySelector("div[data-test-id='pinHeader']");
 			if (typeof parentDiv === "undefined" || parentDiv === null)
 			{
-				console.error("div[data-test-id='closeupActionBar'] div div:");
+				console.error("div[data-test-id='closeupActionBar'] div div or div[data-test-id='pinHeader']:");
 				return console.error(parentDiv);
 			}
 
 			//TODO NEED BETTER SELECTION!
 			//query = document.querySelectorAll("a[rel] img[alt]");
-			query = $("div.closeupLegoContainer").find("a:first").find("img");
+			var query = $("img.GrowthUnauthPinImage__Image:first");
+
+			if (typeof query === "undefined" || query === null || query.length === 0)
+				query = $("div.closeupLegoContainer").find("a:first").find("img");
 
 			if (debug) console.log(query);
 
@@ -351,9 +365,14 @@ async function SetUpForPin()
 			buttonDiv.appendChild(buttonButton);
 			parentDiv.appendChild(buttonDiv);
 			$(buttonDiv).addClass("items-center");
-			$(buttonDiv).attr("style", "display: flex;");
+			if (login === true) $(buttonDiv).attr("style", "display: flex;");
 			$(buttonButton).addClass("SaveButton SaveButton--enabled SaveButton__background--enabled SaveButton__background");
 			$(buttonButton).attr("style", "padding: 10px 14px; will-change: transform; margin-left: 8px;");
+			if (login === false)
+			{
+				$(buttonButton).addClass("red active");
+				$(buttonButton).attr("style", "background-color: rgb(230, 0, 35); padding: 10px 14px; will-change: transform; margin-left: 8px; border-radius: 8px; max-height: inherit;");
+			}
 			$(buttonButton).attr("id", "myBtn");
 
 			if (pFullSize)
@@ -378,6 +397,28 @@ async function SetUpForPin()
 			}
 		}, deltaTime);
 	} catch (e) { console.error(e); }
+}
+
+//Hide popup after scrolling
+function HidePopup()
+{
+	if (login)
+		return;
+
+	var button = $(" button[aria-label='close']");
+	if (button.length >= 1)
+		$(button).click();
+
+	setTimeout(async function ()
+	{
+		var popup = $(" div[data-test-id='giftWrap']:parent");
+		if (debug)
+		{
+			console.log(popup);
+			console.log(button);
+		} 
+		$(popup).attr("style", "display:none;");
+	}, deltaTime);
 }
 
 async function SetEventButton(btn, url)
@@ -423,8 +464,15 @@ function ShowFullSize(url)
 {
 	try
 	{
-		var queryCloseup = $("div.Closeup");
+		var queryCloseup = $("main[data-test-id='unauthPinPage']").find("div[data-test-id='pin']:first");
+
+		if (typeof queryCloseup === "undefined" || queryCloseup === null || queryCloseup.length === 0)
+			queryCloseup = $("div.Closeup");
+
 		var querycontainCloseup = $("div.containCloseup");
+
+		if (typeof querycontainCloseup === "undefined" || querycontainCloseup === null || querycontainCloseup.length === 0)
+			querycontainCloseup = $("div[data-test-id='pinHeader']");
 
 		if ($("#pp_divFullSize").length === 0)
 		{
@@ -443,8 +491,8 @@ function ShowFullSize(url)
 
 		var img = $("<img id=pp_img src='" + url + "'></img>");
 		var queryImg = $(img);
-
 		var maxWidth = queryCloseup.css("width");
+
 		if (typeof maxWidth === "undefined" || maxWidth === null)
 			return console.error("Max width error:" + maxWidth);
 
