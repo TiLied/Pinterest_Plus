@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.4.01
+// @version     0.4.02
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -549,8 +549,16 @@ function GetFullSizeURL(img)
 						})
 							.fail(function ()
 							{
-								if (debug) alert("this try diferent url = " + oldSrc);
-								resolve(oldSrc);
+								src = src.replace(/gif/, "webp");
+								$.get(src, function ()
+								{
+									resolve(src);
+								})
+									.fail(function ()
+									{
+										if (debug) alert("this try diferent url = " + oldSrc);
+										resolve(oldSrc);
+									});
 							});
 					});
 			});
