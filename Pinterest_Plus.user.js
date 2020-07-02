@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.4.04
+// @version     0.5.00
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -19,137 +19,59 @@
 // @grant       GM.deleteValue
 // ==/UserScript==
 
-var whatPage = 0,
-	fullSize = false,
-	oriMaxWidthOne,
-	oriMaxWidthTwo,
-	oriHeight,
-	oriWidth,
-	login,
-	oldWay = false;
-
-const oneSecond = 1000,
-	deltaTime = 1500;
-
-//prefs
-var pFullSize,
-	debug = false;
-
-/**
-* ENUM, BECAUSE WHY NOT ¯\_(ツ)_/¯
-* SEE FUNCTION GetPage()
-*/
-var Page;
-(function (Page)
+class Options
 {
-	Page[Page["ErrorNothing"] = 0] = "ErrorNothing";
-	Page[Page["front"] = 1] = "front";
-	Page[Page["search"] = 2] = "search";
-	Page[Page["pin"] = 3] = "pin";
-	Page[Page["topics"] = 4] = "topics";
-	Page[Page["news_hub"] = 5] = "news_hub";
-	Page[Page["categories"] = 6] = "categories";
-	Page[Page["ErrorNothing2"] = 7] = "ErrorNothing2";
-	Page[Page["ErrorNothing3"] = 8] = "ErrorNothing3";
-	Page[Page["ErrorNothing4"] = 9] = "ErrorNothing4";
-	Page[Page["board"] = 10] = "board";
-})(Page || (Page = {}));
-
-void function Main()
-{
-	console.log("Pinterest Plus v" + GM.info.script.version + " initialization");
-	//Middle click
-	document.addEventListener("click", function (e) { e.button === 1 && e.stopPropagation(); }, true);
-	//Url handler for changing(If you don't like tabs)
-	UrlHandler();
-	//Place CSS in head
-	SetCSS();
-	//Set settings or create
-	SetSettings(function ()
+	constructor(debug)
 	{
-		//check login
-		if (debug) console.log($("main[data-test-id='unauthPinPage']"));
-		if ($("main[data-test-id='unauthPinPage']").length !== 0)
-			login = false;
-		else
-			login = true;
-		if(debug) console.log("login: " + login);
-		//Check on what page we are and switch. Currently only on pin page
-		SwitchPage();
-		console.log("Page number: " + whatPage + "/" + Page[whatPage] + " page");
-	});
-}();
-
-function SetCSS()
-{
-	$("head").append($("<!--Start of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
-
-	$("head").append($("<style type=text/css></style>").text("button.ppTrue \
-	{                                         \
-		border:2px solid black!important;     \
-	}                                         \
-	"));
-
-	$("head").append($("<style type=text/css></style>").text("#myBtn \
-	{                                         \
-		align-items: center;\
-		box-sizing: border-box;\
-		color:#fff;\
-		font-size: 16px;\
-		font-weight: 700;\
-		letter-spacing: -.4px;\
-		padding: 10px;\
-		padding-top: 10px;\
-		padding-right: 14px;\
-		padding-left: 14px;\
-		padding-bottom: 10px;\
-		margin-top: -4px;\
-		border-style: solid;\
-		border-width: 0px;\
-	}                                         \
-	"));
-
-	$("head").append($("<style type=text/css></style>").text("#pp_divFullSize \
-	{                                         \
-		z-index: 500;!important;     \
-		justify-content: center;\
-		display: flex;\
-	}                                         \
-	"));
-
-	$("head").append($("<!--End of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
-}
-
-async function SetSettings(callBack)
-{
-	//THIS IS ABOUT pFullSize
-	if (HasValue("ppFullSize", false))
-	{
-		pFullSize = await GM.getValue("ppFullSize");
+		this.debug = debug;
 	}
 
-	//Console log prefs with value
-	console.log("*prefs:");
-	console.log("*-----*");
-	var vals = await GM.listValues();
-
-	//Find out that var in for block is not local... Seriously js?
-	for (let i = 0; i < vals.length; i++)
+	get Debug()
 	{
-		console.log("*" + vals[i] + ":" + await GM.getValue(vals[i]));
+		let v =
+		{
+			debug: this.debug
+		};
+
+		return v;
 	}
-	console.log("*-----*");
 
-	callBack();
-}
-
-//Check if value exists or not.  optValue = Optional
-async function HasValue(nameVal, optValue)
-{
-	var vals = await GM.listValues();
-
-	if (vals.length === 0)
+	set Debug(obj)
 	{
+		this.debug = obj["debug"];
+	}
+
+	//Start
+	//async Methods/Functions GM_VALUE
+	async HasValueGM(nameVal, optValue)
+	{
+		var vals = await GM.listValues();
+
+		if (vals.length === 0)
+		{
+			if (optValue !== undefined)
+			{
+				GM.setValue(nameVal, optValue);
+				return true;
+			} else
+			{
+				return false;
+			}
+		}
+
+		if (typeof nameVal !== "string")
+		{
+			return alert("name of value: '" + nameVal + "' are not string");
+		}
+
+		for (let i = 0; i < vals.length; i++)
+		{
+			if (vals[i] === nameVal)
+			{
+				return true;
+			}
+		}
+
 		if (optValue !== undefined)
 		{
 			GM.setValue(nameVal, optValue);
@@ -159,147 +81,355 @@ async function HasValue(nameVal, optValue)
 			return false;
 		}
 	}
-
-	if (typeof nameVal !== "string")
+	async DeleteValuesGM(nameVal)
 	{
-		return alert("name of value: '" + nameVal + "' are not string");
+		var vals = await GM.listValues();
+
+		if (vals.length === 0 || typeof nameVal !== "string")
+		{
+			return;
+		}
+
+		switch (nameVal)
+		{
+			case "all":
+				for (let i = 0; i < vals.length; i++)
+				{
+					if (vals[i] !== "adm")
+					{
+						GM.deleteValue(vals[i]);
+					}
+				}
+				break;
+			case "old":
+				for (let i = 0; i < vals.length; i++)
+				{
+					if (vals[i] === "debug" || vals[i] === "debugA")
+					{
+						GM.deleteValue(vals[i]);
+					}
+				}
+				break;
+			default:
+				for (let i = 0; i < vals.length; i++)
+				{
+					if (vals[i] === nameVal)
+					{
+						GM.deleteValue(nameVal);
+					}
+				}
+				break;
+		}
+	}
+	async UpdateGM(what)
+	{
+		var gmVal;
+
+		switch (what)
+		{
+			case "options":
+				gmVal = JSON.stringify(options.values);
+				GM.setValue("pp_options", gmVal);
+				break;
+			default:
+				alert("class:Options.UpdateGM(" + what + "). default switch");
+				break;
+		}
+	}
+	//async Methods/Functions GM_VALUE
+	//End
+}
+
+class Main extends Options
+{
+	whatPage = 0;
+	fullSize = false;
+	login;
+	oldWay = false;
+	oneSecond = 1000;
+	deltaTime = 1500;
+
+	
+	constructor(debug, pFullSize)
+	{
+		super(debug);
+		this.pFullSize = pFullSize;
 	}
 
-	for (let i = 0; i < vals.length; i++)
+	get getValues()
 	{
-		if (vals[i] === nameVal)
+		return this.Debug.push(this.pFullSize);
+	}
+
+	set setValues(obj)
+	{
+		this.debug = obj["debug"];
+		this.pFullSize = obj["pFullSize"];
+		console.log(obj);
+	}
+
+	_Main()
+	{
+		console.log("Pinterest Plus v" + GM.info.script.version + " initialization");
+		//Middle click
+		document.addEventListener("click", function (e) { e.button === 1 && e.stopPropagation(); }, true);
+		//Url handler for changing(If you don't like tabs)
+		this.UrlHandler();
+		//Place CSS in head
+		this.SetCSS();
+		//Set settings or create
+		this.SetSettings(function ()
 		{
-			return true;
+			//check login
+			if (main.debug) console.log($("main[data-test-id='unauthPinPage']"));
+
+			if ($("main[data-test-id='unauthPinPage']").length !== 0)
+				main.login = false;
+			else
+				main.login = true;
+
+			if (main.debug) console.log("login: " + main.login);
+			//Check on what page we are and switch. Currently only on pin page
+			main.SwitchPage();
+			console.log("Page number: " + main.whatPage + "/" + Page[main.whatPage] + " page");
+		});
+	}
+
+	SetCSS()
+	{
+		$("head").append($("<!--Start of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
+
+		$("head").append($("<style type=text/css></style>").text("button.ppTrue \
+		{                                         \
+			border:2px solid black!important;     \
+		}                                         \
+		"));
+
+		$("head").append($("<style type=text/css></style>").text("#myBtn \
+		{                                         \
+			align-items: center;\
+			box-sizing: border-box;\
+			color:#fff;\
+			font-size: 16px;\
+			font-weight: 700;\
+			letter-spacing: -.4px;\
+			padding: 10px;\
+			padding-top: 10px;\
+			padding-right: 14px;\
+			padding-left: 14px;\
+			padding-bottom: 10px;\
+			margin-top: -4px;\
+			border-style: solid;\
+			border-width: 0px;\
+		}                                         \
+		"));
+
+		$("head").append($("<style type=text/css></style>").text("#pp_divFullSize \
+		{                                         \
+			z-index: 500;!important;     \
+			justify-content: center;\
+			display: flex;\
+		}                                         \
+		"));
+
+		$("head").append($("<!--End of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
+	}
+
+	async SetSettings(callBack)
+	{
+		//THIS IS ABOUT pFullSize
+		if (this.HasValueGM("ppFullSize", false))
+		{
+			this.pFullSize = await GM.getValue("ppFullSize");
+		}
+
+		//Console log prefs with value
+		console.log("*prefs:");
+		console.log("*-----*");
+		var vals = await GM.listValues();
+
+		//Find out that var in for block is not local... Seriously js?
+		for (let i = 0; i < vals.length; i++)
+		{
+			console.log("*" + vals[i] + ":" + await GM.getValue(vals[i]));
+		}
+		console.log("*-----*");
+
+		callBack();
+	}
+
+	SwitchPage()
+	{
+		switch (this.GetPage(document.URL))
+	{
+			case 1:
+				break;
+			case 2:
+				this.HidePopup();
+				break;
+			case 4:
+			case 5:
+			case 6:
+			case 10:
+				break;
+			case 3:
+				this.HidePopup();
+				this.SetUpForPin();
+				break;
+			default:
+				break;
 		}
 	}
 
-	if (optValue !== undefined)
+	//On what page are we?
+	GetPage(url)
 	{
-		GM.setValue(nameVal, optValue);
-		return true;
-	} else
-	{
-		return false;
-	}
-}
+		/*
+		1-front page
+		2-search page
+		3-pin page
+		4-topics page
+		5-news_hub page
+		6-categories page
+		10-board page
+		*/
+		const reg = new RegExp("https:\\/\\/([a-z]+\\.|[a-z-]+\\.|)pinterest\\.(com|jp|at|ca|ch|co\\.uk|com\\.mx|de|dk|fr|nz|se|com\\.au|ie|ru)");
 
-//Delete Values
-async function DeleteValues(nameVal)
-{
-	var vals = await GM.listValues();
-	
-	if (vals.length === 0 || typeof nameVal !== "string")
-	{
-		return;
-	}
-
-	switch (nameVal)
-	{
-		case "all":
-			for (let i = 0; i < vals.length; i++)
-			{
-				GM.deleteValue(vals[i]);
-			}
-			break;
-		case "old":
-			for (let i = 0; i < vals.length; i++)
-			{
-				if (vals[i] === "debug" || vals[i] === "debugA")
-				{
-					GM.deleteValue(vals[i]);
-				}
-			}
-			break;
-		default:
-			for (let i = 0; i < vals.length; i++)
-			{
-				if (vals[i] === nameVal)
-				{
-					GM.deleteValue(nameVal);
-				}
-			}
-			break;
-	}
-}
-
-
-function SwitchPage()
-{
-	switch (GetPage(document.URL))
-{
-		case 1:
-			break;
-		case 2:
-			HidePopup();
-			break;
-		case 4:
-		case 5:
-		case 6:
-		case 10:
-			break;
-		case 3:
-			HidePopup();
-			SetUpForPin();
-			break;
-		default:
-			break;
-	}
-}
-
-//On what page are we?
-function GetPage(url)
-{
-	/*
-	1-front page
-	2-search page
-	3-pin page
-	4-topics page
-	5-news_hub page
-	6-categories page
-	10-board page
-	*/
-	if (document.location.pathname === "/")
-	{
-		whatPage = 1;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/search/i))
-	{
-		whatPage = 2;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/pin/i))
-	{
-		whatPage = 3;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/topics/i))
-	{
-		whatPage = 4;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/news_hub/i))
-	{
-		whatPage = 5;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/categories/i))
-	{
-		whatPage = 6;
-	} else
-	{
-		whatPage = 10;
-	}
-	return whatPage;
-}
-
-//UI SETTING "Full size"
-async function SetUpForPin()
-{
-	try
-	{
-		setTimeout(async function ()
+		if (document.location.pathname === "/")
 		{
-			var buttonDiv = document.createElement("div");
-			var buttonButton = document.createElement("button");
-			var buttonText = document.createTextNode("Full size");
-			var parentDiv = document.querySelector("div[data-test-id='closeupActionBar'] div div") || document.querySelector("div[data-test-id='pinHeader']");
-			if (typeof parentDiv === "undefined" || parentDiv === null)
-			{
-				console.error("div[data-test-id='closeupActionBar'] div div or div[data-test-id='pinHeader']:");
-				return console.error(parentDiv);
-			}
+			this.whatPage = 1;
+		} else if (url.match(new RegExp(reg.source + "/search", "i")))
+		{
+			this.whatPage = 2;
+		} else if (url.match(new RegExp(reg.source + "/pin", "i")))
+		{
+			this.whatPage = 3;
+		} else if (url.match(new RegExp(reg.source + "/topics", "i")))
+		{
+			this.whatPage = 4;
+		} else if (url.match(new RegExp(reg.source + "/news_hub", "i")))
+		{
+			this.whatPage = 5;
+		} else if (url.match(new RegExp(reg.source + "/categories", "i")))
+		{
+			this.whatPage = 6;
+		} else
+		{
+			this.whatPage = 10;
+		}
+		return this.whatPage;
+	}
 
+	//UI SETTING "Full size"
+	SetUpForPin()
+	{
+		var buttonDiv = document.createElement("div");
+		var buttonButton = document.createElement("button");
+		var buttonText = document.createTextNode("Full size");
+		var parentDiv = document.querySelector("div[data-test-id='closeupActionBar'] div div") || document.querySelector("div[data-test-id='pinHeader']");
+
+		if (typeof parentDiv === "undefined" || parentDiv === null)
+		{
+			console.error("div[data-test-id='closeupActionBar'] div div or div[data-test-id='pinHeader']:");
+			return console.error(parentDiv);
+		}
+
+		buttonButton.appendChild(buttonText);
+		buttonDiv.appendChild(buttonButton);
+		parentDiv.appendChild(buttonDiv);
+		$(buttonDiv).addClass("items-center");
+
+		if (this.login === true) $(buttonDiv).attr("style", "display: flex;");
+
+		$(buttonButton).addClass("SaveButton SaveButton--enabled SaveButton__background--enabled SaveButton__background");
+		$(buttonButton).attr("style", "padding: 10px 14px; will-change: transform; margin-left: 8px;");
+
+		if (this.login === false)
+		{
+			$(buttonButton).addClass("red active");
+			$(buttonButton).attr("style", "background-color: rgb(230, 0, 35); padding: 10px 14px; will-change: transform; margin-left: 8px; border-radius: 8px; max-height: inherit;");
+		}
+		$(buttonButton).attr("id", "myBtn");
+
+		if (this.pFullSize)
+		{
+			$(buttonButton).addClass("ppTrue");
+		}
+
+		this.Core(buttonButton);
+	}
+
+	async Core(buttonButton)
+	{
+		if (!this.oldWay)
+		{
+			var regU = document.URL.match(/\/(\d+)\/|\/([A-Z]\w+)\//)
+			var id = regU[1];
+			var arr = [];
+
+			if (typeof id === "undefined")
+				id = regU[2];
+			else if (typeof id === "undefined") { this.oldway = true; return this.Core(buttonButton); }
+
+			var time = Date.now();
+			var urlRec = "https://www.pinterest.ru/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
+
+			$.get(urlRec, async function (r)
+			{
+				if (r["resource_response"]["status"] === "success")
+				{
+					if (debug) console.log(r["resource_response"]["data"]);
+					let pin = r["resource_response"]["data"];
+					if (pin["is_video"] === false && pin["videos"] === null)
+					{
+						if (pin["carousel_data"] === null) 
+						{
+							arr.push(pin["images"]["orig"]["url"]);
+							main.SetEventButton(buttonButton, arr);
+							if (main.pFullSize)
+							{
+								main.ShowFullSize(pin["images"]["orig"]["url"]);
+							}
+							return $(buttonButton).attr("title", "" + pin["images"]["orig"]["width"] + "px x " + pin["images"]["orig"]["height"] + "px");
+						} else
+						{
+							/*let urlF = await GetFullSizeURL(query);
+
+							if (typeof urlF === "undefined" || urlF === null)
+							{
+								console.error("image full url:");
+								return console.error(urlF);
+							}
+
+							SetEventButton(buttonButton, urlF);
+
+							if (pFullSize)
+							{
+								//ChangeSource(urlF, query);
+								ShowFullSize(urlF[0]);
+							}*/
+						}
+					} else
+					{
+						return console.log("VIDEO!!!");
+					}
+
+				} else
+				{
+					main.oldWay = true;
+					console.error(r);
+					return main.Core(buttonButton);
+				}
+			}, "json")
+				.fail(function (e)
+				{
+					main.oldWay = true;
+					console.error(e);
+					return main.Core(buttonButton);
+				});
+
+		} else
+		{
 			//TODO NEED BETTER SELECTION!
 			//query = document.querySelectorAll("a[rel] img[alt]");
 			var query = $("article").find("img");
@@ -315,172 +445,95 @@ async function SetUpForPin()
 				return console.error(query);
 			}
 
-			buttonButton.appendChild(buttonText);
-			buttonDiv.appendChild(buttonButton);
-			parentDiv.appendChild(buttonDiv);
-			$(buttonDiv).addClass("items-center");
+			let urlF = await this.GetFullSizeURL(query);
 
-			if (login === true) $(buttonDiv).attr("style", "display: flex;");
-			$(buttonButton).addClass("SaveButton SaveButton--enabled SaveButton__background--enabled SaveButton__background");
-			$(buttonButton).attr("style", "padding: 10px 14px; will-change: transform; margin-left: 8px;");
-
-			if (login === false)
+			if (typeof urlF === "undefined" || urlF === null)
 			{
-				$(buttonButton).addClass("red active");
-				$(buttonButton).attr("style", "background-color: rgb(230, 0, 35); padding: 10px 14px; will-change: transform; margin-left: 8px; border-radius: 8px; max-height: inherit;");
-			}
-			$(buttonButton).attr("id", "myBtn");
-
-			if (pFullSize)
-			{
-				$(buttonButton).addClass("ppTrue");
+				console.error("image full url:");
+				return console.error(urlF);
 			}
 
-			if (!oldWay)
-			{
-				var id = document.URL.match(/\/(\d+)\//)[1];
-				var time = Date.now();
-				var urlRec = "https://www.pinterest.ru/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
+			this.SetEventButton(buttonButton, urlF);
 
-				$.get(urlRec, async function (r)
+			if (this.pFullSize)
+			{
+				this.ShowFullSize(urlF[0]);
+			}
+		}
+	}
+
+	//Hide popup after scrolling
+	HidePopup()
+	{
+		if (this.login)
+			return;
+
+		setTimeout(function ()
+		{
+			let button = $(" button[aria-label='close']");
+			if (button.length >= 1)
+				$(button).click();
+
+			var popup = $(" div[data-test-id='giftWrap']:parent");
+			if (debug)
+			{
+				console.log(popup);
+				console.log(button);
+			}
+			$(popup).attr("style", "display:none;");
+		}, this.deltaTime);
+	}
+
+	async SetEventButton(btn, url)
+	{
+		$(btn).on('mousedown', async function (e)
+		{
+			if ((e.which === 3))
+			{
+				if (main.pFullSize)
 				{
-					if (r["resource_response"]["status"] === "success")
-					{
-						if (debug) console.log(r["resource_response"]["data"]);
-						let pin = r["resource_response"]["data"];
-						if (pin["is_video"] === false)
-						{
-							if (pin["carousel_data"] === null) 
-							{
-								SetEventButton(buttonButton, [pin["images"]["orig"]["url"]]);
-								if (pFullSize)
-								{
-									ShowFullSize(pin["images"]["orig"]["url"]);
-								}
-								return $(buttonButton).attr("title", "" + pin["images"]["orig"]["width"] + "px x " + pin["images"]["orig"]["height"] + "px");
-							} else
-							{
-								/*let urlF = await GetFullSizeURL(query);
-
-								if (typeof urlF === "undefined" || urlF === null)
-								{
-									console.error("image full url:");
-									return console.error(urlF);
-								}
-
-								SetEventButton(buttonButton, urlF);
-
-								if (pFullSize)
-								{
-									//ChangeSource(urlF, query);
-									ShowFullSize(urlF[0]);
-								}*/
-							}
-						} else
-						{
-							return console.log("VIDEO!!!");
-						}
-
-					} else
-					{
-						oldWay = true;
-						console.error(r);
-						return SetUpForPin();
+					GM.setValue("ppFullSize", false);
+					$(btn).removeClass("ppTrue");
+					let obj = {
+						debug: main.debug,
+						pFullSize: await GM.getValue("ppFullSize")
 					}
-				}, "json")
-					.fail(function (e)
-					{
-						oldWay = true;
-						console.error(e);
-						return SetUpForPin();
-					});
-
-			} else
-			{
-				let urlF = await GetFullSizeURL(query);
-
-				if (typeof urlF === "undefined" || urlF === null)
+					main.setValues = obj;
+				} else
 				{
-					console.error("image full url:");
-					return console.error(urlF);
+					GM.setValue("ppFullSize", true);
+					$(btn).addClass("ppTrue");
+					let obj = {
+						debug: main.debug,
+						pFullSize: await GM.getValue("ppFullSize")
+					}
+					main.setValues = obj;
 				}
-
-				SetEventButton(buttonButton, urlF);
-
-				if (pFullSize)
+				console.log("right");
+			}
+			if ((e.which === 1))
+			{
+				if (main.fullSize)
 				{
-					ShowFullSize(urlF[0]);
+					main.ChangeTagsBack();
+				} else
+				{
+					main.ShowFullSize(url[0]);
 				}
+				console.log("left");
 			}
-		}, deltaTime);
-	} catch (e) { console.error(e); }
-}
-
-//Hide popup after scrolling
-function HidePopup()
-{
-	if (login)
-		return;
-
-	setTimeout(function ()
-	{
-		let button = $(" button[aria-label='close']");
-		if (button.length >= 1)
-			$(button).click();
-
-		var popup = $(" div[data-test-id='giftWrap']:parent");
-		if (debug)
-		{
-			console.log(popup);
-			console.log(button);
-		}
-		$(popup).attr("style", "display:none;");
-	}, deltaTime);
-}
-
-async function SetEventButton(btn, url)
-{
-	$(btn).on('mousedown', async function (e)
-	{
-		if (e.which === 3)
-		{
-			if (pFullSize)
+			if ((e.which === 2))
 			{
-				GM.setValue("ppFullSize", false);
-				$(btn).removeClass("ppTrue");
-				pFullSize = await GM.getValue("ppFullSize");
-			} else
-			{
-				GM.setValue("ppFullSize", true);
-				$(btn).addClass("ppTrue");
-				pFullSize = await GM.getValue("ppFullSize");
+				GM.openInTab(url[0]);
+				console.log("middle");
 			}
-			console.log("right");
-		}
-		if (e.which === 1)
-		{
-			if (fullSize)
-			{
-				ChangeTagsBack(url[0]);
-			} else
-			{
-				ShowFullSize(url[0]);
-			}
-			console.log("left");
-		}
-		if (e.which === 2)
-		{
-			GM.openInTab(url);
-			console.log("middle");
-		}
-		e.preventDefault();
-	});
-}
+			e.preventDefault();
+		});
+	}
 
-function ShowFullSize(url)
-{
-	try
+	ShowFullSize(url)
 	{
+
 		var queryCloseup = $("main[data-test-id='unauthPinPage']").find("div[data-test-id='pin']:first");
 
 		if (typeof queryCloseup === "undefined" || queryCloseup === null || queryCloseup.length === 0)
@@ -503,7 +556,7 @@ function ShowFullSize(url)
 		{
 			querycontainCloseup.css("padding-top", url.height + 100);
 			querypp_divFullSize.show(500);
-			return fullSize = true;
+			return this.fullSize = true;
 		}
 
 		var img = $("<img id=pp_img src='" + url + "'></img>");
@@ -524,92 +577,122 @@ function ShowFullSize(url)
 		querycontainCloseup.css("padding-top", url.height + 100);
 		querypp_divFullSize.show(500);
 
-		fullSize = true;
-	} catch (e) { console.error(e); }
-}
-
-async function GetFullSizeURL(img)
-{
-	if (typeof img === "undefined" || img === null)
-	{
-		return console.error("image url not found:" + img);
+		this.fullSize = true;
 	}
 
-	var arr = [];
-
-	for (let i = 0; i < img.length; i++)
+	async GetFullSizeURL(img)
 	{
-		let src = $(img)[i].currentSrc;
-		let oldSrc = src;
-		let endUrl = new RegExp(src.slice(src.length - 3));
-
-		if (debug) console.log(endUrl);
-
-		src = src.replace(/[0-9]+x/, "originals");
-
-		if (debug) console.log(src);
-
-		await new Promise(function (resolve)
+		if (typeof img === "undefined" || img === null)
 		{
-			$.get(src, function ()
-			{
-				resolve(arr.push(src));
-			})
-				.fail(function ()
-				{
-					src = src.replace(endUrl, "png");
-					$.get(src, function ()
-					{
-						resolve(arr.push(src));
-					})
-						.fail(function ()
-						{
-							src = src.replace(/png/, "gif");
-							$.get(src, function ()
-							{
-								resolve(arr.push(src));
-							})
-								.fail(function ()
-								{
-									src = src.replace(/gif/, "webp");
-									$.get(src, function ()
-									{
-										resolve(arr.push(src));
-									})
-										.fail(function ()
-										{
-											if (debug) alert("this try diferent url = " + oldSrc);
-											resolve(arr.push(oldSrc));
-										});
-								});
-						});
-				});
-		});
-	}
-	return arr;
-}
-
-function ChangeTagsBack()
-{
-	$("div.containCloseup").css("padding-top", 0);
-	$("#pp_divFullSize").hide(500);
-	fullSize = false;
-}
-
-//hHander for url
-function UrlHandler()
-{
-	this.oldHash = window.location.pathname;
-	this.Check;
-
-	var that = this;
-	var detect = function ()
-	{
-		if (that.oldHash !== window.location.pathname)
-		{
-			that.oldHash = window.location.pathname;
-			setTimeout(function () { SwitchPage(); }, oneSecond);
+			return console.error("image url not found:" + img);
 		}
-	};
-	this.Check = setInterval(function () { detect(); }, 200);
+
+		var arr = [];
+
+		for (let i = 0; i < img.length; i++)
+		{
+			let src = $(img)[i].currentSrc;
+			let oldSrc = src;
+			let endUrl = new RegExp(src.slice(src.length - 3));
+
+			if (this.debug) console.log(endUrl);
+
+			src = src.replace(/[0-9]+x/, "originals");
+
+			if (this.debug) console.log(src);
+
+			await new Promise(function (resolve)
+			{
+				$.get(src, function ()
+				{
+					resolve(arr.push(src));
+				})
+					.fail(function ()
+					{
+						src = src.replace(endUrl, "png");
+						$.get(src, function ()
+						{
+							resolve(arr.push(src));
+						})
+							.fail(function ()
+							{
+								src = src.replace(/png/, "gif");
+								$.get(src, function ()
+								{
+									resolve(arr.push(src));
+								})
+									.fail(function ()
+									{
+										src = src.replace(/gif/, "webp");
+										$.get(src, function ()
+										{
+											resolve(arr.push(src));
+										})
+											.fail(function ()
+											{
+												if (main.debug) alert("this try diferent url = " + oldSrc);
+												resolve(arr.push(oldSrc));
+											});
+									});
+							});
+					});
+			});
+		}
+		return arr;
+	}
+
+	ChangeTagsBack()
+	{
+		$("div.containCloseup").css("padding-top", 0);
+		$("#pp_divFullSize").hide(500);
+		this.fullSize = false;
+	}
+
+	//Handler for url
+	UrlHandler()
+	{
+		this.oldHash = window.location.pathname;
+		this.Check;
+
+		var that = this;
+		var detect = function ()
+		{
+			if (that.oldHash !== window.location.pathname)
+			{
+				that.oldHash = window.location.pathname;
+				setTimeout(function () { main.SwitchPage(); }, main.deltaTime);
+			}
+		};
+		this.Check = setInterval(function () { detect(); }, 200);
+	}
 }
+
+var main = new Main(false, false);
+
+/**
+* ENUM, BECAUSE WHY NOT ¯\_(ツ)_/¯
+* SEE FUNCTION GetPage()
+*/
+var Page;
+(function (Page)
+{
+	Page[Page["ErrorNothing"] = 0] = "ErrorNothing";
+	Page[Page["front"] = 1] = "front";
+	Page[Page["search"] = 2] = "search";
+	Page[Page["pin"] = 3] = "pin";
+	Page[Page["topics"] = 4] = "topics";
+	Page[Page["news_hub"] = 5] = "news_hub";
+	Page[Page["categories"] = 6] = "categories";
+	Page[Page["ErrorNothing2"] = 7] = "ErrorNothing2";
+	Page[Page["ErrorNothing3"] = 8] = "ErrorNothing3";
+	Page[Page["ErrorNothing4"] = 9] = "ErrorNothing4";
+	Page[Page["board"] = 10] = "board";
+})(Page || (Page = {}));
+
+
+
+$(window).on("load", function ()
+{
+	console.log(main);
+	main._Main();
+});
