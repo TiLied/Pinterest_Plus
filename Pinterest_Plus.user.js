@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.5.01
+// @version     0.5.02
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -380,7 +380,7 @@ class Main extends Options
 			else if (typeof id === "undefined") { this.oldWay = true; return this.Core(buttonButton); }
 
 			var time = Date.now();
-			var urlRec = "https://www.pinterest.ru/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
+			var urlRec = "https://www.pinterest.com/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
 
 			$.get(urlRec, async function (r)
 			{
@@ -541,6 +541,7 @@ class Main extends Options
 
 	ShowFullSize(url)
 	{
+		let img;
 
 		var queryCloseup = $("main[data-test-id='unauthPinPage']").find("div[data-test-id='pin']:first");
 
@@ -567,7 +568,15 @@ class Main extends Options
 			return this.fullSize = true;
 		}
 
-		var img = $("<img id=pp_img src='" + url + "'></img>");
+		if ($("#pp_img").length !== 0)
+		{
+			$("#pp_img").attr('src', url);
+			img = $("#pp_img");
+		} else
+		{
+			img = $("<img id=pp_img src='" + url + "'></img>");
+		}
+
 		var queryImg = $(img);
 		var maxWidth = queryCloseup.css("width");
 
