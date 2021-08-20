@@ -3,9 +3,9 @@
 https://greasyfork.org/scripts/30839
 ### Description
 
-Show full size + working middle click to open new tab + open original image.
+Show full size + ~~working middle click to open new tab~~ + open original image.
 
-[Gif](https://i.imgur.com/BvsazFJ.gifv) example of full size and default resize.
+### If script is not working properly, consider using alternatives, highly recommend using Image Max URL is not only supports pinterest, but many other websites https://greasyfork.org/en/scripts/36662-image-max-url
 
 Controls:
 1) Left click on button "Full size": Expand image as wide as image is or as wide as monitor.
