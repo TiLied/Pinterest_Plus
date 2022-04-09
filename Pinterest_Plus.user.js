@@ -3,9 +3,8 @@
 // @namespace   https://greasyfork.org/users/102866
 // @description Show full size + working middle click to open new tab + open original image.
 // @include     https://*.pinterest.*/*
-// @require     https://code.jquery.com/jquery-3.6.0.min.js
 // @author      TiLied
-// @version     0.6.00
+// @version     0.6.01
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -28,20 +27,29 @@ class PinterestPlus
 
 		this._FirstTime();
 		this._SetCSS();
-		this._HidePopup();
 	}
 
 	_SetCSS()
 	{
-		$("head").append($("<!--Start of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
+		
+		document.head.append("<!--Start of Pinterest Plus v" + GM.info.script.version + " CSS-->");
 
-		$("head").append($("<style type=text/css></style>").text("button.ppTrue \
+		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">button.ppTrue\
+			{\
+				border: 2px solid black!important;\
+			}</style>`);
+
+		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">button.ppTrue\
+			{\
+				border: 2px solid black!important;\
+			}</style>`);
+		
+		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">button.ppTrue \
 		{                                         \
 			border:2px solid black!important;     \
-		}                                         \
-		"));
+		}</style>`);
 
-		$("head").append($("<style type=text/css></style>").text("#myBtn \
+		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">#myBtn \
 		{                                         \
 			display: inherit;\
 			align-items: center;\
@@ -58,44 +66,22 @@ class PinterestPlus
 			padding: 10px 14px;\
 			will-change: transform;\
 			margin-left: 8px;\
-		}                                         \
-		"));
+		}</style>`);
 
-		$("head").append($("<style type=text/css></style>").text("#myBtn:hover \
+		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">#myBtn:hover \
 		{                                         \
 			background-color: #ad081b;\
-		}                                         \
-		"));
+		}</style>`);
 
-		$("head").append($("<style type=text/css></style>").text("#pp_divFullSize \
+		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">#pp_divFullSize \
 		{                                         \
 			z-index: 500;!important;     \
 			justify-content: center;\
-			display: inherit; \
-		}                                         \
-		"));
-
-		$("head").append($("<!--End of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
-	}
-
-	//Hide popup after scrolling
-	_HidePopup()
-	{
-		setTimeout(function ()
-		{
-			let button = $(" button[aria-label='close']");
-
-			if (button.length >= 1)
-				$(button).click();
-
-			let popup = $(" div[data-test-id='giftWrap']:parent");
-
-			console.log(popup);
-			console.log(button);
-
-			$(popup).attr("style", "display:none;");
-
-		}, 1500);
+			display: grid; \
+		}</style>`);
+		
+		document.head.append("<!--End of Pinterest Plus v" + GM.info.script.version + " CSS-->");
+	
 	}
 
 	async _FirstTime()
@@ -128,7 +114,7 @@ class PinterestPlus
 		let buttonDiv = document.createElement("div");
 		let buttonButton = document.createElement("button");
 		let buttonText = document.createTextNode("Full Size");
-		let parentDiv = document.querySelector("div[data-test-id='closeupActionBar']>div>div, div[data-test-id='UnauthBestPinCardBodyContainer']>div>div>div, div.UnauthStoryPinCloseupBody__container>div>div");
+		let parentDiv = document.querySelector("div[data-test-id='closeupActionBar']>div>div, div[data-test-id='UnauthBestPinCardBodyContainer']>div>div>div, div.UnauthStoryPinCloseupBody__container>div>div, div[data-test-id='CloseupDetails']");
 
 		if (typeof parentDiv === "undefined" || parentDiv == null)
 		{
@@ -143,11 +129,11 @@ class PinterestPlus
 		parentDiv.appendChild(buttonDiv);
 
 		//
-		let queryCloseup = $("div[data-test-id='pin']:first, div.Closeup");
+		let queryCloseup = document.querySelector("div[data-test-id='CloseupMainPin'], div.reactCloseupScrollContainer");
 
 		if (typeof queryCloseup === "undefined" || queryCloseup == null || queryCloseup.length === 0)
 		{
-			console.error("div[data-test-id='pin']:first, div.Closeup:", queryCloseup);
+			console.error("div[data-test-id='pin']:first, div.reactCloseupScrollContainer:", queryCloseup);
 			return;
 		}
 
@@ -166,9 +152,10 @@ class PinterestPlus
 
 		if (this.btnOn)
 		{
-			$(buttonButton).addClass("ppTrue");
+			buttonButton.classList.add("ppTrue");
+
+			div.style.display = "grid";
 		}
-		//
 
 		this.Events(buttonButton);
 
@@ -197,65 +184,65 @@ class PinterestPlus
 
 		let urlRec = "https://" + url.host + "/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
 
-		$.get(urlRec, async function (r)
-		{
-			if (r["resource_response"]["status"] === "success")
+		fetch(urlRec)
+			.then((response) =>
 			{
-				console.log(r["resource_response"]["data"]);
-
-				let pin = r["resource_response"]["data"];
-
-				if (pin["videos"] != null)
+				return response.json();
+			})
+			.then((r) =>
+			{
+				if (r["resource_response"]["status"] === "success")
 				{
-					let k0 = Object.keys(pin["videos"]["video_list"])[0];
+					console.log(r["resource_response"]["data"]);
 
-					pp.urls[0] = pin["videos"]["video_list"][k0]["url"];
+					let pin = r["resource_response"]["data"];
 
-					$(btn).attr("title", "" + pin["videos"]["video_list"][k0]["width"] + "px x " + pin["videos"]["video_list"][k0]["height"] + "px");
-
-					return;
-				}
-
-				if (pin["story_pin_data"] != null)
-				{
-					let sp = pin["story_pin_data"]["pages"];
-
-					for (let i in sp)
+					if (pin["videos"] != null)
 					{
-						if (pp.urls[0] === "")
-						{
-							pp.urls[0] = sp[i]["image"]["images"]["originals"]["url"];
-							continue;
-						}
-						pp.urls.push(sp[i]["image"]["images"]["originals"]["url"]);
+						let k0 = Object.keys(pin["videos"]["video_list"])[0];
+
+						pp.urls[0] = pin["videos"]["video_list"][k0]["url"];
+
+						btn.setAttribute('title', "" + pin["videos"]["video_list"][k0]["width"] + "px x " + pin["videos"]["video_list"][k0]["height"] + "px")
+
+						return;
 					}
 
+					if (pin["story_pin_data"] != null)
+					{
+						let sp = pin["story_pin_data"]["pages"];
+
+						for (let i in sp)
+						{
+							if (pp.urls[0] === "")
+							{
+								pp.urls[0] = sp[i]["image"]["images"]["originals"]["url"];
+								continue;
+							}
+							pp.urls.push(sp[i]["image"]["images"]["originals"]["url"]);
+						}
+
+						return;
+					}
+
+					pp.urls[0] = pin["images"]["orig"]["url"];
+
+					btn.setAttribute("title", "" + pin["images"]["orig"]["width"] + "px x " + pin["images"]["orig"]["height"] + "px");
+
+					if (pp.btnOn)
+						pp.Show(pp.urls[0]);
+
 					return;
+				} else
+				{
+					console.error(r);
 				}
-
-				pp.urls[0] = pin["images"]["orig"]["url"];
-
-				$(btn).attr("title", "" + pin["images"]["orig"]["width"] + "px x " + pin["images"]["orig"]["height"] + "px");
-
-				if (pp.btnOn)
-					pp.Show(pp.urls[0]);
-
-				return;
-			} else
-			{
-				console.error(r);
-			}
-		}, "json")
-			.fail(function (e)
-			{
-				console.error(e);
 			});
-
 	}
 
 	Events(btn)
 	{
-		$(btn).on('mousedown', async function (e)
+		btn.addEventListener('mousedown', async function (e)
 		{
 			if ((e.which === 3))
 			{
@@ -263,14 +250,14 @@ class PinterestPlus
 				{
 					GM.setValue("ppFullSize", false);
 
-					$(btn).removeClass("ppTrue");
+					btn.classList.remove("ppTrue");
 
 					pp.btnOn = false;
 				} else
 				{
 					GM.setValue("ppFullSize", true);
 
-					$(btn).addClass("ppTrue");
+					btn.classList.add("ppTrue");
 
 					pp.btnOn = true;
 				}
@@ -280,7 +267,13 @@ class PinterestPlus
 			if ((e.which === 1))
 			{
 				pp.Show(pp.urls[0]);
-				$("#pp_divFullSize").toggle(500);
+
+				let _div = document.querySelector("#pp_divFullSize");
+
+				if (_div.style.display === "none")
+					_div.style.display = "grid";
+				else
+					_div.style.display = "none";
 				//console.log("left");
 			}
 			if ((e.which === 2))
@@ -300,8 +293,6 @@ class PinterestPlus
 	{
 		let img = document.querySelector("#pp_img");
 
-		let div = document.querySelector("#pp_divFullSize");
-
 		if (img != null)
 		{
 			img.setAttribute("src", url);
@@ -311,7 +302,9 @@ class PinterestPlus
 
 			img.id = "pp_img";
 			img.setAttribute("src", url);
-			div.prepend(img);
+
+			let _div = document.querySelector("#pp_divFullSize");
+			_div.prepend(img);
 		}
 	}
 
@@ -321,8 +314,8 @@ class PinterestPlus
 		this.oldHash = window.location.pathname;
 		this.Check;
 
-		var that = this;
-		var detect = function ()
+		let that = this;
+		let detect = function ()
 		{
 			if (that.oldHash !== window.location.pathname)
 			{
@@ -337,7 +330,7 @@ class PinterestPlus
 	//async Methods/Functions GM_VALUE
 	async HasValueGM(nameVal, optValue)
 	{
-		var vals = await GM.listValues();
+		let vals = await GM.listValues();
 
 		if (vals.length === 0)
 		{
@@ -375,7 +368,7 @@ class PinterestPlus
 	}
 	async DeleteValuesGM(nameVal)
 	{
-		var vals = await GM.listValues();
+		let vals = await GM.listValues();
 
 		if (vals.length === 0 || typeof nameVal !== "string")
 		{
@@ -432,13 +425,15 @@ class PinterestPlus
 	//End
 }
 
-let pp = new PinterestPlus();
+let pp;
 
-$(window).on("load", function ()
+window.onload = function ()
 {
+	pp = new PinterestPlus();
+
 	setTimeout(() =>
 	{
 		pp.Main();
 		console.log(pp);
-	}, 1000);
-});
+	}, 1250);
+};
