@@ -4,7 +4,7 @@
 // @description Show full size + working middle click to open new tab + open original image.
 // @include     https://*.pinterest.*/*
 // @author      TiLied
-// @version     0.6.01
+// @version     0.6.02
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -50,7 +50,8 @@ class PinterestPlus
 		}</style>`);
 
 		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">#myBtn \
-		{                                         \
+		{              \
+			pointer-events: auto;!important;\
 			display: inherit;\
 			align-items: center;\
 			box-sizing: border-box;\
@@ -75,7 +76,7 @@ class PinterestPlus
 
 		document.head.insertAdjacentHTML("beforeend", `<style type="text/css">#pp_divFullSize \
 		{                                         \
-			z-index: 500;!important;     \
+			z-index: 500;!important;\
 			justify-content: center;\
 			display: grid; \
 		}</style>`);
@@ -114,7 +115,11 @@ class PinterestPlus
 		let buttonDiv = document.createElement("div");
 		let buttonButton = document.createElement("button");
 		let buttonText = document.createTextNode("Full Size");
-		let parentDiv = document.querySelector("div[data-test-id='closeupActionBar']>div>div, div[data-test-id='UnauthBestPinCardBodyContainer']>div>div>div, div.UnauthStoryPinCloseupBody__container>div>div, div[data-test-id='CloseupDetails']");
+		let parentDiv = document.querySelector("div[data-test-id='closeupActionBar']>div>div, \
+div[data-test-id='UnauthBestPinCardBodyContainer']>div>div>div, \
+div.UnauthStoryPinCloseupBody__container>div>div, \
+div[data-test-id='CloseupDetails'], \
+div[data-test-id='CloseupMainPin']>div>div:last-child>div");
 
 		if (typeof parentDiv === "undefined" || parentDiv == null)
 		{
