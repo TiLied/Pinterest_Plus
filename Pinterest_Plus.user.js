@@ -4,7 +4,7 @@
 // @description Show full size + working middle click to open new tab + open original image.
 // @include     https://*.pinterest.*/*
 // @author      TiLied
-// @version     0.6.02
+// @version     0.6.03
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -108,7 +108,10 @@ class PinterestPlus
 	Main()
 	{
 		if (!document.URL.match("/pin/"))
+		{
+			this.UrlHandler();
 			return;
+		}
 		
 		this.urls = [""];
 
@@ -175,7 +178,7 @@ div[data-test-id='CloseupMainPin']>div>div:last-child>div");
 
 		let url = new URL(document.URL);
 
-		let regU = document.URL.match(/\/(\d+)\/|pin\/([\w].+\w+)\//);
+		let regU = document.URL.match(/\/(\d+)\/|pin\/([\w\-]+)\/?/);
 
 		let id = regU[1];
 
@@ -185,6 +188,8 @@ div[data-test-id='CloseupMainPin']>div>div:last-child>div");
 		if (typeof id === "undefined")
 		{
 			//TODO! not through request!
+			console.error("id is undefined");
+			return;
 		}
 
 		let urlRec = "https://" + url.host + "/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
