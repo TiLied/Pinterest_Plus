@@ -3,7 +3,7 @@
 https://greasyfork.org/scripts/30839
 ### Description
 
-Show full size + ~~working middle click to open new tab~~ + open original image.
+Show full size + open original image.
 
 ### If script is not working properly, consider using alternatives, highly recommend using Image Max URL is not only supports pinterest, but many other websites https://github.com/qsniyg/maxurl
 
