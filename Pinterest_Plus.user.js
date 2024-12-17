@@ -1,12 +1,22 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name        Pinterest Plus
 // @namespace   https://greasyfork.org/users/102866
 // @description Show full size + working middle click to open new tab
 // @include     https://*.pinterest.com/*
 // @include     https://*.pinterest.jp/*
+// @include     https://*.pinterest.at/*
+// @include     https://*.pinterest.ca/*
+// @include     https://*.pinterest.ch/*
+// @include     https://*.pinterest.co.uk/*
+// @include     https://*.pinterest.com.mx/*
+// @include     https://*.pinterest.de/*
+// @include     https://*.pinterest.dk/*
+// @include     https://*.pinterest.fr/*
+// @include     https://*.pinterest.nz/*
+// @include     https://*.pinterest.se/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.11
+// @version     0.1.12
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -25,11 +35,29 @@ const oneSecond = 1000;
 //prefs
 var pFullSize;
 
-Main();
-
-function Main()
+/**
+* ENUM, BECAUSE WHY NOT ¯\_(ツ)_/¯
+* SEE FUNCTION GetPage()
+*/
+var Page;
+(function (Page)
 {
-	console.log("Pinterest Plus v" + GM_info.script.version + " Initialized");
+	Page[Page["ErrorNothing"] = 0] = "ErrorNothing";
+	Page[Page["front"] = 1] = "front";
+	Page[Page["search"] = 2] = "search";
+	Page[Page["pin"] = 3] = "pin";
+	Page[Page["topics"] = 4] = "topics";
+	Page[Page["news_hub"] = 5] = "news_hub";
+	Page[Page["categories"] = 6] = "categories";
+	Page[Page["ErrorNothing2"] = 7] = "ErrorNothing2";
+	Page[Page["ErrorNothing3"] = 8] = "ErrorNothing3";
+	Page[Page["ErrorNothing4"] = 9] = "ErrorNothing4";
+	Page[Page["board"] = 10] = "board";
+})(Page || (Page = {}));
+
+void function Main()
+{
+	console.log("Pinterest Plus v" + GM_info.script.version + " initialization");
 	//Middle click
 	document.addEventListener("click", function (e) { e.button === 1 && e.stopPropagation(); }, true);
 	//Url handler for changing(If you don't like tabs)
@@ -40,8 +68,8 @@ function Main()
 	SetSettings();
 	//Check on what page we are and switch. Currently only on pin page
 	SwitchPage();
-	console.log("Page number: " + whatPage);	//Enum plz :c
-}
+	console.log("Page number: " + whatPage + "/" + Page[whatPage] + " page");
+}();
 
 function SetCSS()
 {
@@ -203,19 +231,19 @@ function GetPage(url)
 	if (document.location.pathname === "/")
 	{
 		whatPage = 1;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/search/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/search/i))
 	{
 		whatPage = 2;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/pin/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/pin/i))
 	{
 		whatPage = 3;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/topics/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/topics/i))
 	{
 		whatPage = 4;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/news_hub/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/news_hub/i))
 	{
 		whatPage = 5;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp)\/categories/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/categories/i))
 	{
 		whatPage = 6;
 	} else
