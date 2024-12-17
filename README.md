@@ -1,6 +1,6 @@
 # Pinterest_Plus
 ### Download
-https://greasyfork.org/scripts/27404
+https://greasyfork.org/scripts/30839
 ### Description
 
 Show full size + working middle click to open new tab
