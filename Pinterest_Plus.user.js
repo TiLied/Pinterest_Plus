@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.5.02
+// @version     0.5.03
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -333,8 +333,8 @@ class Main extends Options
 
 		if (typeof parentDiv === "undefined" || parentDiv === null)
 		{
-			console.error("div[data-test-id='closeupActionBar'] div div or div[data-test-id='pinHeader']:");
-			return console.error(parentDiv);
+			console.log("div[data-test-id='closeupActionBar'] div div or div[data-test-id='pinHeader']:");
+			return console.log(parentDiv);
 		}
 
 		buttonButton.appendChild(buttonText);
@@ -380,13 +380,22 @@ class Main extends Options
 			else if (typeof id === "undefined") { this.oldWay = true; return this.Core(buttonButton); }
 
 			var time = Date.now();
-			var urlRec = "https://www.pinterest.com/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
+
+			var tld = window.location.origin.split('.').pop();
+			if (window.location.origin.endsWith('.com.au') || window.location.origin.endsWith('.com.mx') || window.location.origin.endsWith('.co.uk'))
+			{
+				let a = window.location.origin.split('.');
+				tld = a[a.length - 2] +"."+ a.pop();
+			}
+			if (main.debug) console.log(tld);
+
+			var urlRec = "https://www.pinterest." + tld + "/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
 
 			$.get(urlRec, async function (r)
 			{
 				if (r["resource_response"]["status"] === "success")
 				{
-					if (debug) console.log(r["resource_response"]["data"]);
+					if (main.debug) console.log(r["resource_response"]["data"]);
 					let pin = r["resource_response"]["data"];
 					if (pin["is_video"] === false && pin["videos"] === null)
 					{
@@ -425,14 +434,14 @@ class Main extends Options
 				} else
 				{
 					main.oldWay = true;
-					console.error(r);
+					console.log(r);
 					return main.Core(buttonButton);
 				}
 			}, "json")
 				.fail(function (e)
 				{
 					main.oldWay = true;
-					console.error(e);
+					console.log(e);
 					return main.Core(buttonButton);
 				});
 
@@ -445,20 +454,20 @@ class Main extends Options
 			if (typeof query === "undefined" || query === null || query.length === 0)
 				query = $("div.closeupLegoContainer").find("a:first").find("img");
 
-			if (debug) console.log(query);
+			if (main.debug) console.log(query);
 
 			if (typeof query === "undefined" || query === null || query.length === 0)
 			{
-				console.error("query:");
-				return console.error(query);
+				console.log("query:");
+				return console.log(query);
 			}
 
 			let urlF = await this.GetFullSizeURL(query);
 
 			if (typeof urlF === "undefined" || urlF === null)
 			{
-				console.error("image full url:");
-				return console.error(urlF);
+				console.log("image full url:");
+				return console.log(urlF);
 			}
 
 			this.SetEventButton(buttonButton, urlF);
@@ -483,7 +492,7 @@ class Main extends Options
 				$(button).click();
 
 			var popup = $(" div[data-test-id='giftWrap']:parent");
-			if (debug)
+			if (main.debug)
 			{
 				console.log(popup);
 				console.log(button);
@@ -581,7 +590,7 @@ class Main extends Options
 		var maxWidth = queryCloseup.css("width");
 
 		if (typeof maxWidth === "undefined" || maxWidth === null)
-			return console.error("Max width error:" + maxWidth);
+			return console.log("Max width error:" + maxWidth);
 
 		querypp_divFullSize.prepend(img);
 
@@ -601,7 +610,7 @@ class Main extends Options
 	{
 		if (typeof img === "undefined" || img === null)
 		{
-			return console.error("image url not found:" + img);
+			return console.log("image url not found:" + img);
 		}
 
 		var arr = [];
@@ -705,8 +714,6 @@ var Page;
 	Page[Page["ErrorNothing4"] = 9] = "ErrorNothing4";
 	Page[Page["board"] = 10] = "board";
 })(Page || (Page = {}));
-
-
 
 $(window).on("load", function ()
 {
