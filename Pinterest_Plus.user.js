@@ -16,7 +16,7 @@
 // @include     https://*.pinterest.se/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.01
+// @version     0.2.02
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -65,33 +65,7 @@ var Page;
 
 void function Main()
 {
-	//HACK FOR TM/POLYFILL GM4
-	Object.entries({
-		'GM_deleteValue': 'deleteValue',
-		'GM_getValue': 'getValue',
-		'GM_info': 'info',
-		'GM_listValues': 'listValues',
-		'GM_openInTab': 'openInTab',
-		'GM_setValue': 'setValue'
-	}).forEach(([oldKey, newKey]) =>
-	{
-		if (eval("typeof " + oldKey) !== "undefined")
-			GM[newKey] = function ()
-			{
-				return new Promise((resolve, reject) =>
-				{
-					try
-					{
-						resolve(eval(oldKey).apply(this, arguments));
-					} catch (e)
-					{
-						reject(e);
-					}
-				});
-			};
-		});
-
-	console.log("Pinterest Plus v" + GM_info.script.version + " initialization");
+	console.log("Pinterest Plus v" + GM.info.script.version + " initialization");
 	//Middle click
 	document.addEventListener("click", function (e) { e.button === 1 && e.stopPropagation(); }, true);
 	//Url handler for changing(If you don't like tabs)
@@ -109,7 +83,7 @@ void function Main()
 
 function SetCSS()
 {
-	$("head").append($("<!--Start of Pinterest Plus v" + GM_info.script.version + " CSS-->"));
+	$("head").append($("<!--Start of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
 
 	$("head").append($("<style type=text/css></style>").text("button.ppTrue \
 	{                                         \
@@ -117,7 +91,7 @@ function SetCSS()
 	}                                         \
 	"));
 
-	$("head").append($("<!--End of Pinterest Plus v" + GM_info.script.version + " CSS-->"));
+	$("head").append($("<!--End of Pinterest Plus v" + GM.info.script.version + " CSS-->"));
 }
 
 async function SetSettings(callBack)
