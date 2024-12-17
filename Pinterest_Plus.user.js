@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.3.01
+// @version     0.3.02
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -308,10 +308,11 @@ async function SetUpForPin()
 			var buttonDiv = document.createElement("div");
 			var buttonButton = document.createElement("button");
 			var buttonText = document.createTextNode("Full size");
-			var parentDiv = document.querySelector("div.sticky div div div");
+			var parentDiv = document.querySelector("div[data-test-id='closeupActionBar'] div div");
 			if (typeof parentDiv === "undefined" || parentDiv === null)
 			{
-				return console.error("div.sticky div div div:" + parentDiv);
+				console.error("div[data-test-id='closeupActionBar'] div div:");
+				return console.error(parentDiv);
 			}
 
 			buttonButton.appendChild(buttonText);
@@ -332,7 +333,8 @@ async function SetUpForPin()
 
 			if (typeof urlF === "undefined" || urlF === null)
 			{
-				return console.error("image full url:" + urlF);
+				console.error("image full url:");
+				return console.error(urlF);
 			}
 
 			SetEventButton(buttonButton, urlF);
