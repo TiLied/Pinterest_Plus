@@ -1,11 +1,11 @@
 ﻿// ==UserScript==
 // @name        Pinterest Plus
 // @namespace   https://greasyfork.org/users/102866
-// @description Show full size + working middle click to open new tab
+// @description Show full size + working middle click to open new tab + open original image.
 // @include     https://*.pinterest.*/*
-// @require     https://code.jquery.com/jquery-3.2.1.min.js
+// @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.3.02
+// @version     0.3.03
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -329,7 +329,7 @@ async function SetUpForPin()
 				$(buttonButton).addClass("ppTrue");
 			}
 
-			var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
+			var urlF = await GetFullSizeURL(document.querySelectorAll("a[rel] img[alt]"));
 
 			if (typeof urlF === "undefined" || urlF === null)
 			{
@@ -341,10 +341,10 @@ async function SetUpForPin()
 
 			if (pFullSize)
 			{
-				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
+				ChangeSource(urlF, document.querySelectorAll("a[rel] img[alt]"));
 				ShowFullSize(urlF);
 			}
-		}, oneSecond + 500);
+		}, oneSecond + oneSecond);
 	} catch (e) { console.error(e); }
 }
 
