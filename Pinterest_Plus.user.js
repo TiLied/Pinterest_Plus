@@ -18,7 +18,7 @@
 // @include     https://*.pinterest.ie/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.06
+// @version     0.2.07
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -315,10 +315,11 @@ async function SetUpForPin()
 			var buttonDiv = document.createElement("div");
 			var buttonButton = document.createElement("button");
 			var buttonText = document.createTextNode("Full size");
-			var parentDiv = document.querySelector("div.sticky div div div div");
+			var parentDiv = document.querySelector("div.stickyActionBarRichSave div div div div");
+			console.log(parentDiv);
 			if (debug)
 			{
-				if (typeof parentDiv === "undefined" || parentDiv === null) console.log(parentDiv + " div");
+				if (typeof parentDiv === "undefined" || parentDiv === null) console.log(parentDiv);
 			}
 
 			buttonButton.appendChild(buttonText);
