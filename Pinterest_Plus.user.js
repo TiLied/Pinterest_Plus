@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.5.03
+// @version     0.5.04
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -224,6 +224,14 @@ class Main extends Options
 			margin-top: -4px;\
 			border-style: solid;\
 			border-width: 0px;\
+			background-color: #e60023;\
+			border-radius: 24px;\
+		}                                         \
+		"));
+
+		$("head").append($("<style type=text/css></style>").text("#myBtn:hover \
+		{                                         \
+			background-color: #ad081b;\
 		}                                         \
 		"));
 
@@ -296,7 +304,7 @@ class Main extends Options
 		6-categories page
 		10-board page
 		*/
-		const reg = new RegExp("https:\\/\\/([a-z]+\\.|[a-z-]+\\.|)pinterest\\.(com|jp|at|ca|ch|co\\.uk|com\\.mx|de|dk|fr|nz|se|com\\.au|ie|ru)");
+		const reg = new RegExp("https:\\/\\/([a-z]+\\.|[a-z-]+\\.|)pinterest\\.(com|jp|at|ca|ch|co\\.uk|com\\.mx|de|dk|fr|nz|se|com\\.au|ie|ru|es|ph|pt|it|at|cl|co\\.kr|nz)");
 
 		if (document.location.pathname === "/")
 		{
@@ -382,7 +390,7 @@ class Main extends Options
 			var time = Date.now();
 
 			var tld = window.location.origin.split('.').pop();
-			if (window.location.origin.endsWith('.com.au') || window.location.origin.endsWith('.com.mx') || window.location.origin.endsWith('.co.uk'))
+			if (window.location.origin.endsWith('.co.kr') || window.location.origin.endsWith('.com.au') || window.location.origin.endsWith('.com.mx') || window.location.origin.endsWith('.co.uk'))
 			{
 				let a = window.location.origin.split('.');
 				tld = a[a.length - 2] +"."+ a.pop();
