@@ -18,7 +18,7 @@
 // @include     https://*.pinterest.ie/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.05
+// @version     0.2.06
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -204,6 +204,9 @@ function SwitchPage()
 	switch (GetPage(document.URL))
 {
 		case 1:
+			//Events("Thumbs");
+			//Events("Scroll");
+			break;
 		case 2:
 		case 4:
 		case 5:
@@ -255,6 +258,53 @@ function GetPage(url)
 	return whatPage;
 }
 
+function Events(what)
+{
+	try
+	{
+		var event = function (e)
+		{
+			if ((e.which === 2))
+			{
+				var url = $(this).find(".pinLink").attr("href");
+				if (debug) console.log($(this).find(".pinLink"));
+				GM.openInTab(url);
+				console.log("middle");
+			}
+			e.preventDefault();
+		};
+
+		setTimeout(function ()
+		{
+		switch (what)
+		{
+			case "Thumbs":
+				if (debug) console.log($(".PinRep"));
+				$(".PinRep").on("mousedown", event);
+				break;
+			case "Scroll":
+				window.onscroll = function (ev)
+				{
+					if ((window.innerHeight + window.pageYOffset) >= document.getElementsByClassName("gridCentered").scrollHeight)
+					{
+						Events("DeleteThumbs");
+						if (debug) console.log("SCROLL TRUE");
+						Events("Thumbs");
+					}
+				};
+				break;
+			case "DeleteThumbs":
+				$(".PinRep").off("mousedown", event);
+				break;
+			default:
+				break;
+		}
+		}, oneSecond);
+	} catch (e) { console.error(e); }
+}
+
+
+
 //UI SETTING "Full size"
 async function SetUpForPin()
 {
@@ -265,7 +315,12 @@ async function SetUpForPin()
 			var buttonDiv = document.createElement("div");
 			var buttonButton = document.createElement("button");
 			var buttonText = document.createTextNode("Full size");
-			var parentDiv = document.querySelector("div.flex.justify-between div");
+			var parentDiv = document.querySelector("div.sticky div div div div");
+			if (debug)
+			{
+				if (typeof parentDiv === "undefined" || parentDiv === null) console.log(parentDiv + " div");
+			}
+
 			buttonButton.appendChild(buttonText);
 			buttonDiv.appendChild(buttonButton);
 			parentDiv.appendChild(buttonDiv);
