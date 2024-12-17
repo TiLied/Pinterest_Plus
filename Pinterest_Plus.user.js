@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.4.03
+// @version     0.4.04
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -228,8 +228,6 @@ function SwitchPage()
 	switch (GetPage(document.URL))
 {
 		case 1:
-			//Events("Thumbs");
-			//Events("Scroll");
 			break;
 		case 2:
 			HidePopup();
@@ -283,51 +281,6 @@ function GetPage(url)
 		whatPage = 10;
 	}
 	return whatPage;
-}
-
-function Events(what)
-{
-	try
-	{
-		var event = function (e)
-		{
-			if ((e.which === 2))
-			{
-				var url = $(this).find(".pinLink").attr("href");
-				if (debug) console.log($(this).find(".pinLink"));
-				GM.openInTab(url);
-				console.log("middle");
-			}
-			e.preventDefault();
-		};
-
-		setTimeout(function ()
-		{
-		switch (what)
-		{
-			case "Thumbs":
-				if (debug) console.log($(".PinRep"));
-				$(".PinRep").on("mousedown", event);
-				break;
-			case "Scroll":
-				window.onscroll = function (ev)
-				{
-					if ((window.innerHeight + window.pageYOffset) >= document.getElementsByClassName("gridCentered").scrollHeight)
-					{
-						Events("DeleteThumbs");
-						if (debug) console.log("SCROLL TRUE");
-						Events("Thumbs");
-					}
-				};
-				break;
-			case "DeleteThumbs":
-				$(".PinRep").off("mousedown", event);
-				break;
-			default:
-				break;
-		}
-		}, oneSecond);
-	} catch (e) { console.error(e); }
 }
 
 //UI SETTING "Full size"
@@ -399,13 +352,12 @@ async function SetUpForPin()
 						{
 							if (pin["carousel_data"] === null) 
 							{
-								SetEventButton(buttonButton, pin["images"]["orig"]["url"]);
+								SetEventButton(buttonButton, [pin["images"]["orig"]["url"]]);
 								if (pFullSize)
 								{
-									ChangeSource(pin["images"]["orig"]["url"], query);
 									ShowFullSize(pin["images"]["orig"]["url"]);
 								}
-								return $(buttonButton).attr("title", "" + pin["images"]["orig"]["width"] + "x" + pin["images"]["orig"]["height"] + "");
+								return $(buttonButton).attr("title", "" + pin["images"]["orig"]["width"] + "px x " + pin["images"]["orig"]["height"] + "px");
 							} else
 							{
 								/*let urlF = await GetFullSizeURL(query);
@@ -445,51 +397,6 @@ async function SetUpForPin()
 
 			} else
 			{
-
-				/*
-				var id = document.URL.match(/\/(\d+)\//)[1];
-				var json = JSON.parse($("script#initial-state").text()) || null;
-				var pin = json["pins"][id];
-	
-				if (json !== null && !$.isEmptyObject(pin))
-				{
-					if (debug) console.log(json);
-					if (pin["is_video"] === false)
-					{
-						if ($.isEmptyObject(pin["carousel_data"])) 
-						{
-							SetEventButton(buttonButton, pin["images"]["orig"]["url"]);
-							if (pFullSize)
-							{
-								ChangeSource(pin["images"]["orig"]["url"], query);
-								ShowFullSize(pin["images"]["orig"]["url"]);
-							}
-						} else
-						{
-							let urlF = await GetFullSizeURL(query);
-	
-							if (typeof urlF === "undefined" || urlF === null)
-							{
-								console.error("image full url:");
-								return console.error(urlF);
-							}
-	
-							SetEventButton(buttonButton, urlF);
-	
-							if (pFullSize)
-							{
-								//ChangeSource(urlF, query);
-								ShowFullSize(urlF[0]);
-							}
-						}
-					} else
-					{
-						return console.log("VIDEO!!!");
-					}
-					return;
-				}
-				*/
-
 				let urlF = await GetFullSizeURL(query);
 
 				if (typeof urlF === "undefined" || urlF === null)
@@ -502,7 +409,6 @@ async function SetUpForPin()
 
 				if (pFullSize)
 				{
-					//ChangeSource(urlF, query);
 					ShowFullSize(urlF[0]);
 				}
 			}
@@ -536,7 +442,7 @@ async function SetEventButton(btn, url)
 {
 	$(btn).on('mousedown', async function (e)
 	{
-		if ((e.which === 3))
+		if (e.which === 3)
 		{
 			if (pFullSize)
 			{
@@ -551,7 +457,7 @@ async function SetEventButton(btn, url)
 			}
 			console.log("right");
 		}
-		if ((e.which === 1))
+		if (e.which === 1)
 		{
 			if (fullSize)
 			{
@@ -562,7 +468,7 @@ async function SetEventButton(btn, url)
 			}
 			console.log("left");
 		}
-		if ((e.which === 2))
+		if (e.which === 2)
 		{
 			GM.openInTab(url);
 			console.log("middle");
@@ -681,14 +587,6 @@ async function GetFullSizeURL(img)
 		});
 	}
 	return arr;
-}
-
-function ChangeSource(irl, img)
-{
-	for (let i = 0; i < img.length; i++)
-	{
-		$(img)[i].src = irl;
-	}
 }
 
 function ChangeTagsBack()
