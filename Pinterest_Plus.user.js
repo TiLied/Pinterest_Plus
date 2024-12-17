@@ -16,9 +16,10 @@
 // @include     https://*.pinterest.se/*
 // @include     https://*.pinterest.com.au/*
 // @include     https://*.pinterest.ie/*
+// @include     https://*.pinterest.ru/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.07
+// @version     0.2.08
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -104,6 +105,10 @@ async function SetSettings(callBack)
 		pFullSize = await GM.getValue("ppFullSize");
 	}
 
+	if (pFullSize === true)
+	{
+		pFullSize = false;
+	}
 	//Console log prefs with value
 	console.log("*prefs:");
 	console.log("*-----*");
@@ -236,19 +241,19 @@ function GetPage(url)
 	if (document.location.pathname === "/")
 	{
 		whatPage = 1;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/search/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/search/i))
 	{
 		whatPage = 2;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/pin/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/pin/i))
 	{
 		whatPage = 3;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/topics/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/topics/i))
 	{
 		whatPage = 4;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/news_hub/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/news_hub/i))
 	{
 		whatPage = 5;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/categories/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie|ru)\/categories/i))
 	{
 		whatPage = 6;
 	} else
