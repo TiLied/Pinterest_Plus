@@ -1,5 +1,4 @@
-﻿
-using CSharpToJavaScript.APIs.JS;
+﻿using CSharpToJavaScript.APIs.JS;
 using static CSharpToJavaScript.APIs.JS.GlobalObject;
 using System.Text.Json;
 
@@ -101,7 +100,6 @@ public class PinterestPlus
 
 		List<dynamic> vals = await GM.ListValues();
 
-		//Find out that var in for block is not local... Seriously js?
 		for (int i = 0; i < vals.Count; i++)
 		{
 			Console.WriteLine("*" + vals[i] + ":" + await GM.GetValue(vals[i]));
@@ -152,6 +150,7 @@ public class PinterestPlus
 		parentDiv.AppendChild(buttonDiv);
 
 		//
+		//
 		Element? queryCloseup = (GlobalThis.Window.Document as ParentNode).QuerySelector("div[data-test-id='CloseupMainPin'], div.reactCloseupScrollContainer");
 
 		if (queryCloseup == null)
@@ -191,9 +190,9 @@ public class PinterestPlus
 	{
 		float time = Date.Now();
 
-		var re = new RegExp("\\/(\\d+)\\/|pin\\/([\\w\\-]+)\\/?");
-		var regU = re.Exec(GlobalThis.Window.Document.Location.Href);
-		//string regU = GlobalThis.Window.Document.Location.Href.match(/\/ (\d +)\/| pin\/ ([\w\-] +)\/?/);
+		RegExp re = new("\\/(\\d+)\\/|pin\\/([\\w\\-]+)\\/?");
+		string[] regU = re.Exec(GlobalThis.Window.Document.Location.Href);
+	
 
 		string id = regU[1];
 
