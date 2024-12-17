@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.3.04
+// @version     0.3.05
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -26,7 +26,8 @@ var whatPage = 0,
 	oriHeight,
 	oriWidth;
 
-const oneSecond = 1000;
+const oneSecond = 1000,
+	deltaTime = 1500;
 
 //prefs
 var pFullSize,
@@ -334,12 +335,23 @@ async function SetUpForPin()
 				return console.error(parentDiv);
 			}
 
+			//TODO NEED BETTER SELECTION!
+			//query = document.querySelectorAll("a[rel] img[alt]");
+			query = $("div.closeupLegoContainer").find("a:first").find("img");
+
+			if (debug) console.log(query);
+
+			if (typeof query === "undefined" || query === null || query.length === 0)
+			{
+				console.error("query:");
+				return console.error(query);
+			}
+
 			buttonButton.appendChild(buttonText);
 			buttonDiv.appendChild(buttonButton);
 			parentDiv.appendChild(buttonDiv);
 			$(buttonDiv).addClass("items-center");
 			$(buttonDiv).attr("style", "display: flex;");
-			//$(buttonButton).addClass("isBrioFlat matchDenzel Button Module btn hasText primary SaveButton__background--enabled SaveButton__background");
 			$(buttonButton).addClass("SaveButton SaveButton--enabled SaveButton__background--enabled SaveButton__background");
 			$(buttonButton).attr("style", "padding: 10px 14px; will-change: transform; margin-left: 8px;");
 			$(buttonButton).attr("id", "myBtn");
@@ -347,14 +359,6 @@ async function SetUpForPin()
 			if (pFullSize)
 			{
 				$(buttonButton).addClass("ppTrue");
-			}
-
-			//TODO NEED BETTER SELECTION!
-			//query = document.querySelectorAll("a[rel] img[alt]");
-			query = $("div.closeupLegoContainer").find("a:first").find("img");
-
-			if (debug) {
-				console.log(query);
 			}
 
 			var urlF = await GetFullSizeURL(query);
@@ -372,7 +376,7 @@ async function SetUpForPin()
 				ChangeSource(urlF, query);
 				ShowFullSize(urlF);
 			}
-		}, oneSecond + 500);
+		}, deltaTime);
 	} catch (e) { console.error(e); }
 }
 
@@ -419,35 +423,41 @@ function ShowFullSize(url)
 {
 	try
 	{
+		var queryCloseup = $("div.Closeup");
+		var querycontainCloseup = $("div.containCloseup");
+
 		if ($("#pp_divFullSize").length === 0)
 		{
 			const div = $("<div id=pp_divFullSize></div>").html("");
-			$("div.Closeup").prepend(div);
+			queryCloseup.prepend(div);
 		}
+
+		var querypp_divFullSize = $("#pp_divFullSize");
 
 		if ($("#pp_img").attr('src') === url)
 		{
-			$("div.containCloseup").css("padding-top", url.height + 100);
-			$("#pp_divFullSize").show(500);
+			querycontainCloseup.css("padding-top", url.height + 100);
+			querypp_divFullSize.show(500);
 			return fullSize = true;
 		}
 
 		var img = $("<img id=pp_img src='" + url + "'></img>");
+		var queryImg = $(img);
 
-		var maxWidth = $("div.Closeup").css("width");
+		var maxWidth = queryCloseup.css("width");
 		if (typeof maxWidth === "undefined" || maxWidth === null)
 			return console.error("Max width error:" + maxWidth);
 
-		$("#pp_divFullSize").prepend(img);
+		querypp_divFullSize.prepend(img);
 
-		$("#pp_divFullSize").hide();
+		querypp_divFullSize.hide();
 
-		$(img).css("width", url.width);
-		$(img).css("height", url.height);
-		$(img).css("max-width", maxWidth);
+		queryImg.css("width", url.width);
+		queryImg.css("height", url.height);
+		queryImg.css("max-width", maxWidth);
 
-		$("div.containCloseup").css("padding-top", url.height + 100);
-		$("#pp_divFullSize").show(500);
+		querycontainCloseup.css("padding-top", url.height + 100);
+		querypp_divFullSize.show(500);
 
 		fullSize = true;
 	} catch (e) { console.error(e); }
@@ -459,8 +469,12 @@ function GetFullSizeURL(img)
 		return console.error("image url not found:" + img);
 	}
 
-	var src = $(img).get(0).currentSrc;
+	var src = $(img).get(img.length - 1).currentSrc;
 	var oldSrc = src;
+	var endUrl = new RegExp(src.slice(src.length - 3));
+
+	if (debug) console.log(endUrl);
+
 	src = src.replace(/[0-9]+x/, "originals");
 
 	if (debug) console.log(src);
@@ -473,14 +487,23 @@ function GetFullSizeURL(img)
 		})
 			.fail(function ()
 			{
-				src = src.replace(/jpg/, "png");
+				src = src.replace(endUrl, "png");
 				$.get(src, function ()
 				{
 					resolve(src);
 				})
 					.fail(function ()
 					{
-						resolve(oldSrc);
+						src = src.replace(/png/, "gif");
+						$.get(src, function ()
+						{
+							resolve(src);
+						})
+							.fail(function ()
+							{
+								if (debug) alert("this try diferent url = " + oldSrc);
+								resolve(oldSrc);
+							});
 					});
 			});
 	});
