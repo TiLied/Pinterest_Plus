@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.4.02
+// @version     0.4.03
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -25,7 +25,8 @@ var whatPage = 0,
 	oriMaxWidthTwo,
 	oriHeight,
 	oriWidth,
-	login;
+	login,
+	oldWay = false;
 
 const oneSecond = 1000,
 	deltaTime = 1500;
@@ -365,9 +366,11 @@ async function SetUpForPin()
 			buttonDiv.appendChild(buttonButton);
 			parentDiv.appendChild(buttonDiv);
 			$(buttonDiv).addClass("items-center");
+
 			if (login === true) $(buttonDiv).attr("style", "display: flex;");
 			$(buttonButton).addClass("SaveButton SaveButton--enabled SaveButton__background--enabled SaveButton__background");
 			$(buttonButton).attr("style", "padding: 10px 14px; will-change: transform; margin-left: 8px;");
+
 			if (login === false)
 			{
 				$(buttonButton).addClass("red active");
@@ -380,20 +383,128 @@ async function SetUpForPin()
 				$(buttonButton).addClass("ppTrue");
 			}
 
-			var urlF = await GetFullSizeURL(query);
-
-			if (typeof urlF === "undefined" || urlF === null)
+			if (!oldWay)
 			{
-				console.error("image full url:");
-				return console.error(urlF);
-			}
+				var id = document.URL.match(/\/(\d+)\//)[1];
+				var time = Date.now();
+				var urlRec = "https://www.pinterest.ru/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
 
-			SetEventButton(buttonButton, urlF);
+				$.get(urlRec, async function (r)
+				{
+					if (r["resource_response"]["status"] === "success")
+					{
+						if (debug) console.log(r["resource_response"]["data"]);
+						let pin = r["resource_response"]["data"];
+						if (pin["is_video"] === false)
+						{
+							if (pin["carousel_data"] === null) 
+							{
+								SetEventButton(buttonButton, pin["images"]["orig"]["url"]);
+								if (pFullSize)
+								{
+									ChangeSource(pin["images"]["orig"]["url"], query);
+									ShowFullSize(pin["images"]["orig"]["url"]);
+								}
+								return $(buttonButton).attr("title", "" + pin["images"]["orig"]["width"] + "x" + pin["images"]["orig"]["height"] + "");
+							} else
+							{
+								/*let urlF = await GetFullSizeURL(query);
 
-			if (pFullSize)
+								if (typeof urlF === "undefined" || urlF === null)
+								{
+									console.error("image full url:");
+									return console.error(urlF);
+								}
+
+								SetEventButton(buttonButton, urlF);
+
+								if (pFullSize)
+								{
+									//ChangeSource(urlF, query);
+									ShowFullSize(urlF[0]);
+								}*/
+							}
+						} else
+						{
+							return console.log("VIDEO!!!");
+						}
+
+					} else
+					{
+						oldWay = true;
+						console.error(r);
+						return SetUpForPin();
+					}
+				}, "json")
+					.fail(function (e)
+					{
+						oldWay = true;
+						console.error(e);
+						return SetUpForPin();
+					});
+
+			} else
 			{
-				ChangeSource(urlF, query);
-				ShowFullSize(urlF);
+
+				/*
+				var id = document.URL.match(/\/(\d+)\//)[1];
+				var json = JSON.parse($("script#initial-state").text()) || null;
+				var pin = json["pins"][id];
+	
+				if (json !== null && !$.isEmptyObject(pin))
+				{
+					if (debug) console.log(json);
+					if (pin["is_video"] === false)
+					{
+						if ($.isEmptyObject(pin["carousel_data"])) 
+						{
+							SetEventButton(buttonButton, pin["images"]["orig"]["url"]);
+							if (pFullSize)
+							{
+								ChangeSource(pin["images"]["orig"]["url"], query);
+								ShowFullSize(pin["images"]["orig"]["url"]);
+							}
+						} else
+						{
+							let urlF = await GetFullSizeURL(query);
+	
+							if (typeof urlF === "undefined" || urlF === null)
+							{
+								console.error("image full url:");
+								return console.error(urlF);
+							}
+	
+							SetEventButton(buttonButton, urlF);
+	
+							if (pFullSize)
+							{
+								//ChangeSource(urlF, query);
+								ShowFullSize(urlF[0]);
+							}
+						}
+					} else
+					{
+						return console.log("VIDEO!!!");
+					}
+					return;
+				}
+				*/
+
+				let urlF = await GetFullSizeURL(query);
+
+				if (typeof urlF === "undefined" || urlF === null)
+				{
+					console.error("image full url:");
+					return console.error(urlF);
+				}
+
+				SetEventButton(buttonButton, urlF);
+
+				if (pFullSize)
+				{
+					//ChangeSource(urlF, query);
+					ShowFullSize(urlF[0]);
+				}
 			}
 		}, deltaTime);
 	} catch (e) { console.error(e); }
@@ -405,18 +516,18 @@ function HidePopup()
 	if (login)
 		return;
 
-	var button = $(" button[aria-label='close']");
-	if (button.length >= 1)
-		$(button).click();
-
-	setTimeout(async function ()
+	setTimeout(function ()
 	{
+		let button = $(" button[aria-label='close']");
+		if (button.length >= 1)
+			$(button).click();
+
 		var popup = $(" div[data-test-id='giftWrap']:parent");
 		if (debug)
 		{
 			console.log(popup);
 			console.log(button);
-		} 
+		}
 		$(popup).attr("style", "display:none;");
 	}, deltaTime);
 }
@@ -444,10 +555,10 @@ async function SetEventButton(btn, url)
 		{
 			if (fullSize)
 			{
-				ChangeTagsBack(url);
+				ChangeTagsBack(url[0]);
 			} else
 			{
-				ShowFullSize(url);
+				ShowFullSize(url[0]);
 			}
 			console.log("left");
 		}
@@ -510,66 +621,73 @@ function ShowFullSize(url)
 		fullSize = true;
 	} catch (e) { console.error(e); }
 }
-function GetFullSizeURL(img)
+
+async function GetFullSizeURL(img)
 {
 	if (typeof img === "undefined" || img === null)
 	{
 		return console.error("image url not found:" + img);
 	}
 
-	var src = $(img).get(img.length - 1).currentSrc;
-	var oldSrc = src;
-	var endUrl = new RegExp(src.slice(src.length - 3));
+	var arr = [];
 
-	if (debug) console.log(endUrl);
-
-	src = src.replace(/[0-9]+x/, "originals");
-
-	if (debug) console.log(src);
-
-	return new Promise(function (resolve)
+	for (let i = 0; i < img.length; i++)
 	{
-		$.get(src, function ()
+		let src = $(img)[i].currentSrc;
+		let oldSrc = src;
+		let endUrl = new RegExp(src.slice(src.length - 3));
+
+		if (debug) console.log(endUrl);
+
+		src = src.replace(/[0-9]+x/, "originals");
+
+		if (debug) console.log(src);
+
+		await new Promise(function (resolve)
 		{
-			resolve(src);
-		})
-			.fail(function ()
+			$.get(src, function ()
 			{
-				src = src.replace(endUrl, "png");
-				$.get(src, function ()
+				resolve(arr.push(src));
+			})
+				.fail(function ()
 				{
-					resolve(src);
-				})
-					.fail(function ()
+					src = src.replace(endUrl, "png");
+					$.get(src, function ()
 					{
-						src = src.replace(/png/, "gif");
-						$.get(src, function ()
+						resolve(arr.push(src));
+					})
+						.fail(function ()
 						{
-							resolve(src);
-						})
-							.fail(function ()
+							src = src.replace(/png/, "gif");
+							$.get(src, function ()
 							{
-								src = src.replace(/gif/, "webp");
-								$.get(src, function ()
+								resolve(arr.push(src));
+							})
+								.fail(function ()
 								{
-									resolve(src);
-								})
-									.fail(function ()
+									src = src.replace(/gif/, "webp");
+									$.get(src, function ()
 									{
-										if (debug) alert("this try diferent url = " + oldSrc);
-										resolve(oldSrc);
-									});
-							});
-					});
-			});
-	});
+										resolve(arr.push(src));
+									})
+										.fail(function ()
+										{
+											if (debug) alert("this try diferent url = " + oldSrc);
+											resolve(arr.push(oldSrc));
+										});
+								});
+						});
+				});
+		});
+	}
+	return arr;
 }
 
 function ChangeSource(irl, img)
 {
 	for (let i = 0; i < img.length; i++)
 	{
-		$(img).get(i).src = irl;
+		$(img)[i].src = irl;
 	}
 }
 
