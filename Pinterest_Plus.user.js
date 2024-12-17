@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.5.00
+// @version     0.5.01
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -142,13 +142,15 @@ class Options
 
 class Main extends Options
 {
-	whatPage = 0;
-	fullSize = false;
-	login;
-	oldWay = false;
-	oneSecond = 1000;
-	deltaTime = 1500;
-
+	_SetLocalVal()
+	{
+		this.whatPage = 0;
+		this.fullSize = false;
+		this.login = null;
+		this.oldWay = false;
+		this.oneSecond = 1000;
+		this.deltaTime = 1500;
+	}
 	
 	constructor(debug, pFullSize)
 	{
@@ -171,6 +173,7 @@ class Main extends Options
 	_Main()
 	{
 		console.log("Pinterest Plus v" + GM.info.script.version + " initialization");
+		this._SetLocalVal();
 		//Middle click
 		document.addEventListener("click", function (e) { e.button === 1 && e.stopPropagation(); }, true);
 		//Url handler for changing(If you don't like tabs)
@@ -363,13 +366,18 @@ class Main extends Options
 	{
 		if (!this.oldWay)
 		{
-			var regU = document.URL.match(/\/(\d+)\/|\/([A-Z]\w+)\//)
+			var regU = document.URL.match(/\/(\d+)\/|\/([A-Z].+\w+)\//);
+			if (typeof regU === "undefined" || regU === null)
+			{
+				this.oldWay = true;
+				return this.Core(buttonButton);
+			}
 			var id = regU[1];
 			var arr = [];
 
 			if (typeof id === "undefined")
 				id = regU[2];
-			else if (typeof id === "undefined") { this.oldway = true; return this.Core(buttonButton); }
+			else if (typeof id === "undefined") { this.oldWay = true; return this.Core(buttonButton); }
 
 			var time = Date.now();
 			var urlRec = "https://www.pinterest.ru/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
