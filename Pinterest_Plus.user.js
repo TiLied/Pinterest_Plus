@@ -16,7 +16,7 @@
 // @include     https://*.pinterest.se/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.02
+// @version     0.2.03
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -41,7 +41,7 @@ const oneSecond = 1000;
 
 //prefs
 var pFullSize,
-	debug = false;
+	debug = true;
 
 /**
 * ENUM, BECAUSE WHY NOT ¯\_(ツ)_/¯
@@ -209,7 +209,7 @@ function SwitchPage()
 		case 10:
 			break;
 		case 3:
-			SetUpForPin();
+			//SetUpForPin();
 			break;
 		default:
 			break;
@@ -256,33 +256,36 @@ function GetPage(url)
 //UI SETTING "Full size"
 async function SetUpForPin()
 {
-	var buttonDiv = document.createElement("div");
-	var buttonButton = document.createElement("button");
-	var buttonText = document.createTextNode("Full size");
-	var parentDiv = document.querySelector("div.flex.justify-between div");
-	buttonButton.appendChild(buttonText);
-	buttonDiv.appendChild(buttonButton);
-	parentDiv.appendChild(buttonDiv);
-	$(buttonDiv).addClass("items-center");
-	$(buttonDiv).attr("style", "display: flex;");
-	$(buttonButton).addClass("isBrioFlat matchDenzel Button Module btn hasText rounded primary");
-	$(buttonButton).attr("style", "font-size: 14px; will-change: transform; margin-left: 8px;");
-	$(buttonButton).attr("id", "myBtn");
-	if (pFullSize)
+	try
 	{
-		$(buttonButton).addClass("ppTrue");
-	}
-
-	setTimeout(async function ()
-	{
-		var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
-		SetEventButton(buttonButton, urlF);
-		if (pFullSize)
+		setTimeout(async function ()
 		{
-			ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
-			ChangeImgTags(urlF, document.querySelectorAll("a.imageLink img[alt]"));
-		}
-	}, oneSecond);
+			var buttonDiv = document.createElement("div");
+			var buttonButton = document.createElement("button");
+			var buttonText = document.createTextNode("Full size");
+			var parentDiv = document.querySelector("div.flex.justify-between div");
+			buttonButton.appendChild(buttonText);
+			buttonDiv.appendChild(buttonButton);
+			parentDiv.appendChild(buttonDiv);
+			$(buttonDiv).addClass("items-center");
+			$(buttonDiv).attr("style", "display: flex;");
+			$(buttonButton).addClass("isBrioFlat matchDenzel Button Module btn hasText rounded primary");
+			$(buttonButton).attr("style", "font-size: 14px; will-change: transform; margin-left: 8px;");
+			$(buttonButton).attr("id", "myBtn");
+			if (pFullSize)
+			{
+				$(buttonButton).addClass("ppTrue");
+			}
+
+			var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
+			SetEventButton(buttonButton, urlF);
+			if (pFullSize)
+			{
+				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
+				ChangeImgTags(urlF, document.querySelectorAll("a.imageLink img[alt]"));
+			}
+		}, oneSecond);
+	} catch (e) { console.error(e); }
 }
 
 async function SetEventButton(btn, url)
