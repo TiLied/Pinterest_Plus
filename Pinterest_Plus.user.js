@@ -18,7 +18,7 @@
 // @include     https://*.pinterest.ie/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.04
+// @version     0.2.05
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -285,7 +285,7 @@ async function SetUpForPin()
 			if (pFullSize)
 			{
 				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
-				ChangeImgTags(urlF, document.querySelectorAll("a.imageLink img[alt]"));
+				ChangeImgTags(urlF);
 			}
 		}, oneSecond);
 	} catch (e) { console.error(e); }
@@ -319,7 +319,7 @@ async function SetEventButton(btn, url)
 			{
 				var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
 				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
-				ChangeImgTags(urlF, document.querySelectorAll("a.imageLink img[alt]"));
+				ChangeImgTags(urlF);
 			}
 			console.log("left");
 		}
@@ -367,7 +367,7 @@ function ChangeSource(irl, img)
 	}
 }
 
-function ChangeImgTags(irl, img)
+function ChangeImgTags(irl)
 {
 	try
 	{
@@ -393,15 +393,15 @@ function ChangeImgTags(irl, img)
 			$(closeUp).parent().css("max-width", "initial");
 			$(closeUp).parent().css("margin", 0);
 			if (debug) console.log(closeUp.style.maxWidth);
-			oriMaxWidthTwo = imageLink.parentElement.style.maxWidth;
+			oriMaxWidthTwo = imageLink.parentElement.parentElement.parentElement.style.maxWidth;
 			if (debug)
 			{
-				console.log(imageLink.parentElement.style.maxWidth);
-				console.log(oriMaxWidthTwo);
+				console.log(imageLink.parentElement.parentElement.parentElement.style.maxWidth);
+				console.log("|" + oriMaxWidthTwo);
 			}
 			oriHeight = $(imageLink.childNodes[1]).height();
 			oriWidth = $(imageLink.childNodes[1]).width();
-			imageLink.parentElement.style.maxWidth = "none";
+			imageLink.parentElement.parentElement.parentElement.style.maxWidth = "none";
 			$(imageLink.childNodes[1]).innerHeight(this.height);
 			$(imageLink.childNodes[1]).innerWidth("auto");
 			imageLink.childNodes[1].style.maxHeight = $("a.imageLink > div > div > div > div > div > div > img").height() + "px";
@@ -422,7 +422,7 @@ function ChangeImgTags(irl, img)
 		fullSize = true;
 	} catch (e)
 	{
-		console.log(e);
+		console.error(e);
 	}
 }
 
@@ -434,7 +434,7 @@ function ChangeTagsBack()
 		var imageLink = document.querySelector("a.imageLink");
 		var footer = $(imageLink).parent().parent().parent();
 		closeUp.style.maxWidth = oriMaxWidthOne;
-		imageLink.parentElement.style.maxWidth = oriMaxWidthTwo;
+		imageLink.parentElement.parentElement.parentElement.style.maxWidth = oriMaxWidthTwo;
 		$(imageLink.childNodes[1]).height(oriHeight);
 		$(imageLink.childNodes[1]).width(oriWidth);
 		footer.next().css("margin-top", 0);
