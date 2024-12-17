@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.com/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.07
+// @version     0.1.08
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -19,6 +19,8 @@ var whatPage = 0,
 	oriMaxWidthTwo,
 	oriHeight;
 
+const oneSecond = 1000;
+
 //prefs
 var pFullSize;
 
@@ -27,10 +29,15 @@ Main();
 function Main()
 {
 	console.log("Pinterest Plus v" + GM_info.script.version + " Initialized");
+	//Middle click
 	document.addEventListener("click", function (e) { e.button === 1 && e.stopPropagation(); }, true);
+	//Url handler for changing(If you don't like tabs)
 	UrlHandler();
+	//Place CSS in head
 	SetCSS();
+	//Set settings or create
 	SetSettings();
+	//Check on what page we are and switch. Currently only on pin page
 	SwitchPage();
 	console.log("Page number: " + whatPage);	//Enum plz :c
 }
@@ -215,10 +222,10 @@ function GetPage(url)
 	return whatPage;
 }
 
-//UI SETTING "Full size" AND FUNCTION AND SetUpForMiddleClick
+//UI SETTING "Full size"
 function SetUpForPin()
 {
-	//TODO
+	//TODO rewrite on jquery
 	//*
 	var buttonDiv = document.createElement("div");
 	var buttonButton = document.createElement("button");
@@ -247,7 +254,7 @@ function SetUpForPin()
 			ChangeSource(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 			ChangeImgTags(GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]")), document.querySelectorAll("a.imageLink img[alt]"));
 		}
-	}, 1000);
+	}, oneSecond);
 }
 
 function SetEventButton(btn, url)
@@ -312,6 +319,7 @@ function ChangeImgTags(irl, img)
 	{
 		var closeUp = document.querySelector("div.closeupContainer");
 		var imageLink = document.querySelector("a.imageLink");
+		var footer = $(imageLink).parent();
 		var mWidth = this.width + 64;
 		oriMaxWidthOne = closeUp.style.maxWidth;
 		closeUp.style.maxWidth = mWidth + "px";
@@ -319,7 +327,7 @@ function ChangeImgTags(irl, img)
 		oriHeight = $(imageLink.childNodes[0]).height();
 		imageLink.childNodes[0].style.maxWidth = "none";
 		$(imageLink.childNodes[0]).height("auto");
-		imageLink.nextSibling.style.marginTop = 50 + "px";
+		footer.next().css("margin-top", 50);
 	}
 	imgw.src = irl;
 	fullSize = true;
@@ -329,10 +337,11 @@ function ChangeTagsBack()
 {
 	var closeUp = document.querySelector("div.closeupContainer");
 	var imageLink = document.querySelector("a.imageLink");
+	var footer = $(imageLink).parent();
 	closeUp.style.maxWidth = oriMaxWidthOne;
 	imageLink.childNodes[0].style.maxWidth = oriMaxWidthTwo;
 	$(imageLink.childNodes[0]).height(oriHeight);
-	imageLink.nextSibling.style.marginTop = 0;
+	footer.next().css("margin-top", 0);
 	fullSize = false;
 }
 
@@ -348,7 +357,7 @@ function UrlHandler()
 		if (that.oldHash != window.location.pathname)
 		{
 			that.oldHash = window.location.pathname;
-			setTimeout(function () { SwitchPage(); }, 1000);
+			setTimeout(function () { SwitchPage(); }, oneSecond);
 		}
 	};
 	this.Check = setInterval(function () { detect() }, 200);
