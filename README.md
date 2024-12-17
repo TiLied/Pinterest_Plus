@@ -3,7 +3,7 @@
 https://greasyfork.org/scripts/30839
 ### Description
 
-Show full size + working middle click to open new tab.
+Show full size + working middle click to open new tab + open original image.
 
 [Gif](https://i.imgur.com/BvsazFJ.gifv) example of full size and default resize.
 
