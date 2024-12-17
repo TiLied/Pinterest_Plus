@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.*/*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @author      TiLied
-// @version     0.4.00
+// @version     0.4.01
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -348,7 +348,7 @@ async function SetUpForPin()
 
 			//TODO NEED BETTER SELECTION!
 			//query = document.querySelectorAll("a[rel] img[alt]");
-			var query = $("img.GrowthUnauthPinImage__Image:first");
+			var query = $("article").find("img");
 
 			if (typeof query === "undefined" || query === null || query.length === 0)
 				query = $("div.closeupLegoContainer").find("a:first").find("img");
