@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.com/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.05
+// @version     0.1.06
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -17,7 +17,7 @@ var whatPage = 0,
 	fullSize = false,
 	oriMaxWidthOne,
 	oriMaxWidthTwo,
-	height;
+	oriHeight;
 
 //prefs
 var pFullSize;
@@ -283,8 +283,8 @@ function SetEventButton(btn, url)
 		}
 		if ((e.which == 2))
 		{
-			console.log("middle");
 			GM_openInTab(url);
+			console.log("middle");
 		}
 		e.preventDefault();
 	});
@@ -294,7 +294,6 @@ function GetFullSizeURL(img)
 {
 	var src = img[0].currentSrc;
 	src = src.replace(/[0-9]+x/, "originals");
-	//console.log(img);
 	return src;
 }
 
@@ -311,15 +310,15 @@ function ChangeImgTags(irl, img)
 	var imgw = new Image();
 	imgw.onload = function ()
 	{
-		//alert(this.width + 'x' + this.height);
 		var closeUp = document.querySelector("div.closeupContainer");
 		var imageLink = document.querySelector("a.imageLink");
 		var mWidth = this.width + 64;
-		ChangePositionOfFooterImage(this.height, imageLink.nextSibling);
 		oriMaxWidthOne = closeUp.style.maxWidth;
 		closeUp.style.maxWidth = mWidth + "px";
 		oriMaxWidthTwo = imageLink.childNodes[0].style.maxWidth;
+		oriHeight = $(imageLink.childNodes[0]).height();
 		imageLink.childNodes[0].style.maxWidth = "none";
+		$(imageLink.childNodes[0]).height("auto");
 	}
 	imgw.src = irl;
 	fullSize = true;
@@ -329,16 +328,10 @@ function ChangeTagsBack()
 {
 	var closeUp = document.querySelector("div.closeupContainer");
 	var imageLink = document.querySelector("a.imageLink");
-	var footer = imageLink.nextSibling;
 	closeUp.style.maxWidth = oriMaxWidthOne;
 	imageLink.childNodes[0].style.maxWidth = oriMaxWidthTwo;
-	footer.style.marginTop = 0;
+	$(imageLink.childNodes[0]).height(oriHeight);
 	fullSize = false;
-}
-
-function ChangePositionOfFooterImage(hei, el)
-{
-	el.style.marginTop = (hei/2) + "px";
 }
 
 //hHander for url
@@ -352,7 +345,6 @@ function UrlHandler()
 	{
 		if (that.oldHash != window.location.pathname)
 		{
-			//alert("pathname CHANGED - new has" + window.location.pathname);
 			that.oldHash = window.location.pathname;
 			setTimeout(function () { SwitchPage(); }, 1000);
 		}
