@@ -5,7 +5,7 @@
 // @include     https://*.pinterest.com/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.08
+// @version     0.1.09
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -225,26 +225,22 @@ function GetPage(url)
 //UI SETTING "Full size"
 function SetUpForPin()
 {
-	//TODO rewrite on jquery
-	//*
 	var buttonDiv = document.createElement("div");
 	var buttonButton = document.createElement("button");
 	var buttonText = document.createTextNode("Full size");
 	var parentDiv = document.querySelector("div.flex.justify-between div");
-	var buttonAttr = document.createAttribute("style");
-	buttonAttr.value = "font-size: 14px; will-change: transform; margin-left: 8px;"
 	buttonButton.appendChild(buttonText);
 	buttonDiv.appendChild(buttonButton);
 	parentDiv.appendChild(buttonDiv);
-	buttonDiv.className += "items-center";
-	buttonButton.className += "isBrioFlat matchDenzel Button Module btn hasText rounded primary";
-	buttonButton.setAttributeNode(buttonAttr);
-	buttonButton.setAttribute('id', "myBtn");
+	$(buttonDiv).addClass("items-center");
+	$(buttonDiv).attr("style", "display: flex;");
+	$(buttonButton).addClass("isBrioFlat matchDenzel Button Module btn hasText rounded primary");
+	$(buttonButton).attr("style", "font-size: 14px; will-change: transform; margin-left: 8px;");
+	$(buttonButton).attr("id", "myBtn");
 	if (pFullSize)
 	{
 		$(buttonButton).addClass("ppTrue");
 	}
-	//*
 
 	setTimeout(function ()
 	{
