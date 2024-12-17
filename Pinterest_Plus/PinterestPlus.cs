@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 
-namespace Test_CSTOJS.CSharp;
+namespace Pinterest_Plus;
 
 public class PinterestPlus
 {
