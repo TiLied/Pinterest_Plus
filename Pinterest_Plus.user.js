@@ -14,9 +14,11 @@
 // @include     https://*.pinterest.fr/*
 // @include     https://*.pinterest.nz/*
 // @include     https://*.pinterest.se/*
+// @include     https://*.pinterest.com.au/*
+// @include     https://*.pinterest.ie/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.2.03
+// @version     0.2.04
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
@@ -41,7 +43,7 @@ const oneSecond = 1000;
 
 //prefs
 var pFullSize,
-	debug = true;
+	debug = false;
 
 /**
 * ENUM, BECAUSE WHY NOT ¯\_(ツ)_/¯
@@ -209,7 +211,7 @@ function SwitchPage()
 		case 10:
 			break;
 		case 3:
-			//SetUpForPin();
+			SetUpForPin();
 			break;
 		default:
 			break;
@@ -231,19 +233,19 @@ function GetPage(url)
 	if (document.location.pathname === "/")
 	{
 		whatPage = 1;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/search/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/search/i))
 	{
 		whatPage = 2;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/pin/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/pin/i))
 	{
 		whatPage = 3;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/topics/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/topics/i))
 	{
 		whatPage = 4;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/news_hub/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/news_hub/i))
 	{
 		whatPage = 5;
-	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se)\/categories/i))
+	} else if (url.match(/https:\/\/([a-z]+\.|[a-z-]+\.|)pinterest\.(com|jp|at|ca|ch|co\.uk|com\.mx|de|dk|fr|nz|se|com\.au|ie)\/categories/i))
 	{
 		whatPage = 6;
 	} else
@@ -272,6 +274,7 @@ async function SetUpForPin()
 			$(buttonButton).addClass("isBrioFlat matchDenzel Button Module btn hasText rounded primary");
 			$(buttonButton).attr("style", "font-size: 14px; will-change: transform; margin-left: 8px;");
 			$(buttonButton).attr("id", "myBtn");
+
 			if (pFullSize)
 			{
 				$(buttonButton).addClass("ppTrue");
@@ -373,20 +376,22 @@ function ChangeImgTags(irl, img)
 		{
 			var closeUp = document.querySelector("div.closeupContainer");
 			var imageLink = document.querySelector("a.imageLink");
-			var footer = $(imageLink).parent().parent();
+			var footer = $(imageLink).parent().parent().parent();
 			var mWidth = this.width + 64;
 			if (debug)
 			{
-				console.log("all vars---");
+				console.log("-all vars---");
 				console.log(closeUp);
 				console.log(imageLink);
 				console.log(footer);
 				console.log(mWidth);
-				console.log("all vars---");
+				console.log("-all vars---");
 			}
 			oriMaxWidthOne = closeUp.style.maxWidth;
 			if(debug) console.log(oriMaxWidthOne);
 			closeUp.style.maxWidth = mWidth + "px";
+			$(closeUp).parent().css("max-width", "initial");
+			$(closeUp).parent().css("margin", 0);
 			if (debug) console.log(closeUp.style.maxWidth);
 			oriMaxWidthTwo = imageLink.parentElement.style.maxWidth;
 			if (debug)
@@ -427,7 +432,7 @@ function ChangeTagsBack()
 	{
 		var closeUp = document.querySelector("div.closeupContainer");
 		var imageLink = document.querySelector("a.imageLink");
-		var footer = $(imageLink).parent().parent();
+		var footer = $(imageLink).parent().parent().parent();
 		closeUp.style.maxWidth = oriMaxWidthOne;
 		imageLink.parentElement.style.maxWidth = oriMaxWidthTwo;
 		$(imageLink.childNodes[1]).height(oriHeight);
