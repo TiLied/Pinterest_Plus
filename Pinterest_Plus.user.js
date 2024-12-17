@@ -16,12 +16,18 @@
 // @include     https://*.pinterest.se/*
 // @require     https://code.jquery.com/jquery-3.2.1.min.js
 // @author      TiLied
-// @version     0.1.13
+// @version     0.2.00
 // @grant       GM_openInTab
 // @grant       GM_listValues
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @grant       GM_deleteValue
+// @require     https://arantius.com/misc/greasemonkey/imports/greasemonkey4-polyfill.js
+// @grant       GM.openInTab
+// @grant       GM.listValues
+// @grant       GM.getValue
+// @grant       GM.setValue
+// @grant       GM.deleteValue
 // ==/UserScript==
 
 var whatPage = 0,
@@ -35,7 +41,7 @@ const oneSecond = 1000;
 
 //prefs
 var pFullSize,
-	debug = false;
+	debug = true;
 
 /**
 * ENUM, BECAUSE WHY NOT ¯\_(ツ)_/¯
@@ -67,10 +73,12 @@ void function Main()
 	//Place CSS in head
 	SetCSS();
 	//Set settings or create
-	SetSettings();
-	//Check on what page we are and switch. Currently only on pin page
-	SwitchPage();
-	console.log("Page number: " + whatPage + "/" + Page[whatPage] + " page");
+	SetSettings(function ()
+	{
+		//Check on what page we are and switch. Currently only on pin page
+		SwitchPage();
+		console.log("Page number: " + whatPage + "/" + Page[whatPage] + " page");
+	});
 }();
 
 function SetCSS()
@@ -86,45 +94,39 @@ function SetCSS()
 	$("head").append($("<!--End of Pinterest Plus v" + GM_info.script.version + " CSS-->"));
 }
 
-function SetSettings()
+async function SetSettings(callBack)
 {
 	//THIS IS ABOUT pFullSize
 	if (HasValue("ppFullSize", false))
 	{
-		pFullSize = GM_getValue("ppFullSize");
+		pFullSize = await GM.getValue("ppFullSize");
 	}
 
 	//Console log prefs with value
 	console.log("*prefs:");
 	console.log("*-----*");
-	var vals = [];
+	var vals = await GM.listValues();
 
 	//Find out that var in for block is not local... Seriously js?
-	for (let i = 0; i < GM_listValues().length; i++)
-	{
-		vals[i] = GM_listValues()[i];
-	}
 	for (let i = 0; i < vals.length; i++)
 	{
-		console.log("*" + vals[i] + ":" + GM_getValue(vals[i]));
+		console.log("*" + vals[i] + ":" + await GM.getValue(vals[i]));
 	}
 	console.log("*-----*");
+
+	callBack();
 }
 
 //Check if value exists or not.  optValue = Optional
-function HasValue(nameVal, optValue)
+async function HasValue(nameVal, optValue)
 {
-	var vals = [];
-	for (let i = 0; i < GM_listValues().length; i++)
-	{
-		vals[i] = GM_listValues()[i];
-	}
+	var vals = await GM.listValues();
 
 	if (vals.length === 0)
 	{
 		if (optValue !== undefined)
 		{
-			GM_setValue(nameVal, optValue);
+			GM.setValue(nameVal, optValue);
 			return true;
 		} else
 		{
@@ -147,7 +149,7 @@ function HasValue(nameVal, optValue)
 
 	if (optValue !== undefined)
 	{
-		GM_setValue(nameVal, optValue);
+		GM.setValue(nameVal, optValue);
 		return true;
 	} else
 	{
@@ -156,14 +158,10 @@ function HasValue(nameVal, optValue)
 }
 
 //Delete Values
-function DeleteValues(nameVal)
+async function DeleteValues(nameVal)
 {
-	var vals = [];
-	for (let i = 0; i < GM_listValues().length; i++)
-	{
-		vals[i] = GM_listValues()[i];
-	}
-
+	var vals = await GM.listValues();
+	
 	if (vals.length === 0 || typeof nameVal !== "string")
 	{
 		return;
@@ -174,7 +172,7 @@ function DeleteValues(nameVal)
 		case "all":
 			for (let i = 0; i < vals.length; i++)
 			{
-				GM_deleteValue(vals[i]);
+				GM.deleteValue(vals[i]);
 			}
 			break;
 		case "old":
@@ -182,7 +180,7 @@ function DeleteValues(nameVal)
 			{
 				if (vals[i] === "debug" || vals[i] === "debugA")
 				{
-					GM_deleteValue(vals[i]);
+					GM.deleteValue(vals[i]);
 				}
 			}
 			break;
@@ -191,7 +189,7 @@ function DeleteValues(nameVal)
 			{
 				if (vals[i] === nameVal)
 				{
-					GM_deleteValue(nameVal);
+					GM.deleteValue(nameVal);
 				}
 			}
 			break;
@@ -256,7 +254,7 @@ function GetPage(url)
 }
 
 //UI SETTING "Full size"
-function SetUpForPin()
+async function SetUpForPin()
 {
 	var buttonDiv = document.createElement("div");
 	var buttonButton = document.createElement("button");
@@ -275,9 +273,9 @@ function SetUpForPin()
 		$(buttonButton).addClass("ppTrue");
 	}
 
-	setTimeout(function ()
+	setTimeout(async function ()
 	{
-		var urlF = GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
+		var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
 		SetEventButton(buttonButton, urlF);
 		if (pFullSize)
 		{
@@ -287,22 +285,22 @@ function SetUpForPin()
 	}, oneSecond);
 }
 
-function SetEventButton(btn, url)
+async function SetEventButton(btn, url)
 {
-	$(btn).on('mousedown', function (e)
+	$(btn).on('mousedown', async function (e)
 	{
 		if ((e.which === 3))
 		{
 			if (pFullSize)
 			{
-				GM_setValue("ppFullSize", false);
+				GM.setValue("ppFullSize", false);
 				$(btn).removeClass("ppTrue");
-				pFullSize = GM_getValue("ppFullSize");
+				pFullSize = await GM.getValue("ppFullSize");
 			} else
 			{
-				GM_setValue("ppFullSize", true);
+				GM.setValue("ppFullSize", true);
 				$(btn).addClass("ppTrue");
-				pFullSize = GM_getValue("ppFullSize");
+				pFullSize = await GM.getValue("ppFullSize");
 			}
 			console.log("right");
 		}
@@ -313,7 +311,7 @@ function SetEventButton(btn, url)
 				ChangeTagsBack();
 			} else
 			{
-				var urlF = GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
+				var urlF = await GetFullSizeURL(document.querySelectorAll("a.imageLink img[alt]"));
 				ChangeSource(urlF, document.querySelectorAll("a.imageLink img[alt]"));
 				ChangeImgTags(urlF, document.querySelectorAll("a.imageLink img[alt]"));
 			}
@@ -321,7 +319,7 @@ function SetEventButton(btn, url)
 		}
 		if ((e.which === 2))
 		{
-			GM_openInTab(url);
+			GM.openInTab(url);
 			console.log("middle");
 		}
 		e.preventDefault();
@@ -330,9 +328,29 @@ function SetEventButton(btn, url)
 
 function GetFullSizeURL(img)
 {
+	if (debug) console.log(img);
 	var src = img[0].currentSrc;
+	var oldSrc = src;
 	src = src.replace(/[0-9]+x/, "originals");
-	return src;
+	return new Promise(function (resolve, reject)
+	{
+		$.get(src, function ()
+		{
+			resolve(src);
+		})
+			.fail(function ()
+			{
+				src = src.replace(/jpg/, "png");
+				$.get(src, function ()
+				{
+					resolve(src);
+				})
+					.fail(function ()
+					{
+						resolve(oldSrc);
+					});
+			});
+	});
 }
 
 function ChangeSource(irl, img)
