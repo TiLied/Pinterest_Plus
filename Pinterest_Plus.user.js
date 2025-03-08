@@ -24,7 +24,7 @@
 // @match     https://*.pinterest.pt/*
 // @match     https://*.pinterest.se/*
 // @author	TiLied
-// @version	0.7.01
+// @version	0.7.02
 // @grant	GM_openInTab
 // @grant	GM_listValues
 // @grant	GM_getValue
@@ -130,7 +130,6 @@ class PinterestPlus
 
 		let vals = await GM.listValues();
 
-		//Find out that var in for block is not local... Seriously js?
 		for (let i = 0; i < vals.length; i++)
 		{
 			console.log("*" + vals[i] + ":" + await GM.getValue(vals[i]));
@@ -181,6 +180,7 @@ class PinterestPlus
 		parentDiv.appendChild(buttonDiv);
 
 		//
+		//
 		let queryCloseup = globalThis.window.document.querySelector("div[data-test-id='CloseupMainPin'], div.reactCloseupScrollContainer");
 
 		if (queryCloseup == null)
@@ -211,18 +211,18 @@ class PinterestPlus
 
 		this.Events(buttonButton);
 
-		this.Core(buttonButton);
+		this.GetOrigRequest(buttonButton);
 
 		this.UrlHandler();
 	}
 
-	async Core(btn)
+	async GetOrigRequest(btn)
 	{
 		let time = Date.now();
 
 		let re = new RegExp("\\/(\\d+)\\/|pin\\/([\\w\\-]+)\\/?");
 		let regU = re.exec(globalThis.window.document.location.href);
-		//string regU = GlobalThis.Window.Document.Location.Href.match(/\/ (\d +)\/| pin\/ ([\w\-] +)\/?/);
+
 
 		let id = regU[1];
 
@@ -231,14 +231,35 @@ class PinterestPlus
 
 		if (id == null)
 		{
-			//TODO! not through request!
 			globalThis.console.error("id is undefined");
+
+			globalThis.console.log("Trying without request.");
+			this.GetOrigNoRequest(btn);
+
+			return;
+		}
+		
+		let myHeaders = new Headers();
+		myHeaders.append("X-Pinterest-PWS-Handler", "www/pin/[id].js");
+		
+		let init = {};
+		init.method = "GET";
+		init.headers = myHeaders;
+
+		let urlRec = "https://" + globalThis.window.document.location.host + "/resource/PinResource/get/?source_url=%2Fpin%2F" + id + "%2F&data=%7B%22options%22%3A%7B%22id%22%3A%22" + id + "%22%2C%22field_set_key%22%3A%22detailed%22%2C%22noCache%22%3Atrue%7D%2C%22context%22%3A%7B%7D%7D&_=" + time;
+
+		let res = await globalThis.window.fetch(urlRec, init);
+
+		if (res.status != 200)
+		{
+			globalThis.console.error(`Request failed. Request: ${res}`);
+
+			globalThis.console.log("Trying without request.");
+			this.GetOrigNoRequest(btn);
+
 			return;
 		}
 
-		let urlRec = "https://" + globalThis.window.document.location.host + "/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
-
-		let res = await globalThis.window.fetch(urlRec);
 		let json = await res.json();
 		let r = await json;
 		if (r["resource_response"]["status"] == "success")
@@ -288,6 +309,42 @@ class PinterestPlus
 		{
 			globalThis.console.error(r);
 		}
+	}
+
+	GetOrigNoRequest(btn) 
+	{
+		let re = new RegExp("\\/\\d+x\\/");
+
+		let imgs = globalThis.window.document.querySelectorAll("img");
+		
+		globalThis.console.log(imgs);
+		
+		if (imgs.length == 0)
+		{
+			globalThis.console.error("Query 'img' is null!");
+			return;
+		}
+
+		let img =imgs[0];
+
+		let scr = img.src;
+
+		let match = re.exec(scr);
+		if (match.length == 0)
+		{
+			globalThis.console.error(`No match. Url: ${scr}`);
+			return;
+		}
+
+		scr = scr.replace(match[0], "/originals/");
+
+		if (this._Urls[0] == null)
+			this._Urls.push(scr);
+		else
+			this._Urls[0] = scr;
+
+		if (this._BtnOn)
+			this.Show(this._Urls[0]);
 	}
 
 	Events(btn)
@@ -418,63 +475,6 @@ class PinterestPlus
 		else
 		{
 			return false;
-		}
-	}
-
-	async DeleteValuesGM(nameVal)
-	{
-		let vals = await GM.listValues();
-
-		if (vals.length == 0)
-		{
-			return;
-		}
-
-		switch (nameVal)
-		{
-			case "all":
-				for (let i = 0; i < vals.length; i++)
-				{
-					if (vals[i] != "adm")
-					{
-						GM.deleteValue(vals[i]);
-					}
-				}
-				break;
-			case "old":
-				for (let i = 0; i < vals.length; i++)
-				{
-					if (vals[i] == "debug" || vals[i] == "debugA")
-					{
-						GM.deleteValue(vals[i]);
-					}
-				}
-				break;
-			default:
-				for (let i = 0; i < vals.length; i++)
-				{
-					if (vals[i] == nameVal)
-					{
-						GM.deleteValue(nameVal);
-					}
-				}
-				break;
-		}
-	}
-
-	UpdateGM(what)
-	{
-		let gmVal;
-
-		switch (what)
-		{
-			case "options":
-				gmVal = JSON.stringify("");
-				GM.setValue("pp_options", gmVal);
-				break;
-			default:
-				globalThis.console.error("class:Options.UpdateGM(" + what + "). default switch");
-				break;
 		}
 	}
 	//async Methods/Functions GM_VALUE

@@ -2,6 +2,8 @@
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using CSharpToJavaScript.APIs.JS;
+using CSharpToJavaScript.Utils;
 
 namespace Pinterest_Plus;
 
@@ -11,7 +13,7 @@ internal class Program
 	{
 		CSTOJSOptions opt = new()
 		{
-			AddSBInFront = new("// ==UserScript==\r\n" +
+			AddSBAtTheTop = new("// ==UserScript==\r\n" +
 				"// @name	Pinterest Plus\r\n" +
 				"// @namespace	https://greasyfork.org/users/102866\r\n" +
 				"// @description	Show full size + open original image.\r\n" +
@@ -37,7 +39,7 @@ internal class Program
 				"// @match     https://*.pinterest.pt/*\r\n" +
 				"// @match     https://*.pinterest.se/*\r\n" +
 				"// @author	TiLied\r\n" +
-				"// @version	0.7.01\r\n" +
+				"// @version	0.7.02\r\n" +
 				"// @grant	GM_openInTab\r\n" +
 				"// @grant	GM_listValues\r\n" +
 				"// @grant	GM_getValue\r\n" +
@@ -51,7 +53,7 @@ internal class Program
 				"// @grant	GM.deleteValue\r\n" +
 				"// ==/UserScript==\r\n\r\n"),
 
-			AddSBInEnd = new("\r\nwindow.onload = function ()\r\n" +
+			AddSBAtTheBottom = new("\r\nwindow.onload = function ()\r\n" +
 				"{\r\n" +
 				"\tsetTimeout(() =>\r\n" +
 				"\t{\r\n" +
@@ -60,8 +62,13 @@ internal class Program
 
 			CustomCSNamesToJS = new List<Tuple<string, string>>()
 			{
-				new Tuple<string, string>("Count", "length")
+				new Tuple<string, string>("Count", "length"),
+				new Tuple<string, string>("Append", "append"),
+				new Tuple<string, string>("Method", "method"),
+				new Tuple<string, string>("Headers", "headers"),
 			},
+
+			CustomCSTypesToJS = new() { typeof(Headers2) },
 
 			OutPutPath = "..\\..\\..\\..\\"			
 		};
@@ -71,4 +78,10 @@ internal class Program
 
 		Console.ReadKey();
 	}
+}
+
+[Value("Headers")]
+public class Headers2 : Headers 
+{
+
 }

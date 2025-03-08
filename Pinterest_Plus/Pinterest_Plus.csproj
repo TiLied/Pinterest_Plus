@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharpToJavaScript" Version="0.0.7" />
+    <PackageReference Include="CSharpToJavaScript" Version="0.0.9" />
   </ItemGroup>
 
 </Project>

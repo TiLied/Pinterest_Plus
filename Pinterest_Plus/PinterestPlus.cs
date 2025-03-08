@@ -6,6 +6,8 @@ using Object = CSharpToJavaScript.APIs.JS.Object;
 using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
+using System.Reflection.PortableExecutable;
+using System.Net.NetworkInformation;
 
 namespace Pinterest_Plus;
 
@@ -181,18 +183,18 @@ public class PinterestPlus
 
 		Events(buttonButton);
 
-		Core(buttonButton);
+		GetOrigRequest(buttonButton);
 
 		UrlHandler();
 	}
 
-	private async void Core(Element btn)
+	private async void GetOrigRequest(Element btn)
 	{
 		float time = Date.Now();
 
 		RegExp re = new("\\/(\\d+)\\/|pin\\/([\\w\\-]+)\\/?");
 		string[] regU = re.Exec(GlobalThis.Window.Document.Location.Href);
-	
+
 
 		string id = regU[1];
 
@@ -201,14 +203,35 @@ public class PinterestPlus
 
 		if (id == null)
 		{
-			//TODO! not through request!
 			GlobalThis.Console.Error("id is undefined");
+
+			GlobalThis.Console.Log("Trying without request.");
+			GetOrigNoRequest(btn);
+
+			return;
+		}
+		
+		dynamic myHeaders = new Headers2();
+		myHeaders.Append("X-Pinterest-PWS-Handler", "www/pin/[id].js");
+		
+		dynamic init = new {};
+		init.Method = "GET";
+		init.Headers = myHeaders;
+
+		string urlRec = "https://" + GlobalThis.Window.Document.Location.Host + "/resource/PinResource/get/?source_url=%2Fpin%2F" + id + "%2F&data=%7B%22options%22%3A%7B%22id%22%3A%22" + id + "%22%2C%22field_set_key%22%3A%22detailed%22%2C%22noCache%22%3Atrue%7D%2C%22context%22%3A%7B%7D%7D&_=" + time;
+
+		Response res = await (GlobalThis.Window as WindowOrWorkerGlobalScope).Fetch(urlRec, init);
+
+		if (res.Status != 200)
+		{
+			GlobalThis.Console.Error($"Request failed. Request: {res}");
+
+			GlobalThis.Console.Log("Trying without request.");
+			GetOrigNoRequest(btn);
+
 			return;
 		}
 
-		string urlRec = "https://" + GlobalThis.Window.Document.Location.Host + "/resource/PinResource/get/?source_url=/pin/" + id + "/&data={%22options%22:{%22field_set_key%22:%22detailed%22,%22id%22:%22" + id + "%22},%22context%22:{}}&_=" + time;
-
-		Response res = await (GlobalThis.Window as WindowOrWorkerGlobalScope).Fetch(urlRec);
 		dynamic json = await (res as Body).Json();
 		dynamic r = await json;
 		if (r["resource_response"]["status"] == "success")
@@ -258,6 +281,42 @@ public class PinterestPlus
 		{
 			GlobalThis.Console.Error(r);
 		}
+	}
+
+	private void GetOrigNoRequest(Element btn) 
+	{
+		RegExp re = new("\\/\\d+x\\/");
+
+		NodeList imgs = (GlobalThis.Window.Document as ParentNode).QuerySelectorAll("img");
+		
+		GlobalThis.Console.Log(imgs);
+		
+		if (imgs.Length == 0)
+		{
+			GlobalThis.Console.Error("Query 'img' is null!");
+			return;
+		}
+
+		HTMLImageElement img =(imgs[0] as HTMLImageElement);
+
+		string scr = img.Src;
+
+		string[] match = re.Exec(scr);
+		if (match.Length == 0)
+		{
+			GlobalThis.Console.Error($"No match. Url: {scr}");
+			return;
+		}
+
+		scr = scr.Replace(match[0], "/originals/");
+
+		if (_Urls[0] == null)
+			_Urls.Add(scr);
+		else
+			_Urls[0] = scr;
+
+		if (_BtnOn)
+			Show(_Urls[0]);
 	}
 
 	private void Events(Element btn)
@@ -388,63 +447,6 @@ public class PinterestPlus
 		else
 		{
 			return false;
-		}
-	}
-
-	private async void DeleteValuesGM(string nameVal)
-	{
-		List<dynamic> vals = await GM.ListValues();
-
-		if (vals.Count == 0)
-		{
-			return;
-		}
-
-		switch (nameVal)
-		{
-			case "all":
-				for (int i = 0; i < vals.Count; i++)
-				{
-					if (vals[i] != "adm")
-					{
-						GM.DeleteValue(vals[i]);
-					}
-				}
-				break;
-			case "old":
-				for (int i = 0; i < vals.Count; i++)
-				{
-					if (vals[i] == "debug" || vals[i] == "debugA")
-					{
-						GM.DeleteValue(vals[i]);
-					}
-				}
-				break;
-			default:
-				for (int i = 0; i < vals.Count; i++)
-				{
-					if (vals[i] == nameVal)
-					{
-						GM.DeleteValue(nameVal);
-					}
-				}
-				break;
-		}
-	}
-
-	private void UpdateGM(string what)
-	{
-		dynamic gmVal;
-
-		switch (what)
-		{
-			case "options":
-				gmVal = JsonSerializer.Serialize("");
-				GM.SetValue("pp_options", gmVal);
-				break;
-			default:
-				GlobalThis.Console.Error("class:Options.UpdateGM(" + what + "). default switch");
-				break;
 		}
 	}
 	//async Methods/Functions GM_VALUE
